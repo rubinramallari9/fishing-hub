@@ -2,9 +2,9 @@
 
 {% block content %}
 <header class="bg-dark py-5"
-        style="background-image: url('../static/assets/1.jpg'); background-size: cover; background-position: center; height: 50vh;">
+        style="background-image: url('../static/assets/2.jpg'); background-size: cover; background-position: center; height: 50vh;">
     <div class="container px-4 px-lg-5 my-5 d-flex align-items-center justify-content-center" style="height: 100%;">
-        <h1 class="text-white fw-bold">Fillespanje</h1>
+        <h1 class="text-white fw-bold ">Flourocarbon</h1>
     </div>
 </header>
 
@@ -22,9 +22,9 @@
                                 <!-- Product name-->
                                 <h5 class="fw-bolder">{{ product.product_name }}</h5>
                                 <!-- Product variations-->
-<!--                                {% for variation in product.variations %}-->
-<!--                                    <p>{{ variation.diameter }} - {{ variation.meters }} meters: {{ variation.price }} Lek</p>-->
-<!--                                {% endfor %}-->
+                                {% for variation in product.variations %}
+                                    <p>{{ variation.diameter }} - {{ variation.meters }} meters: {{ variation.price }} Lek</p>
+                                {% endfor %}
                             </div>
                         </div>
                         <!-- Product actions-->

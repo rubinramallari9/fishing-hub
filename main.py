@@ -8,7 +8,8 @@ from flask_bootstrap import Bootstrap4
 class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///users.db'
     SQLALCHEMY_BINDS = {
-        'fillespanje': 'sqlite:///fillespanje.db'
+        'fillespanje': 'sqlite:///fillespanje.db',
+        'flourocarbon': 'sqlite:///flourocarbon.db'
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -34,6 +35,7 @@ class Fillespanje(db.Model):
     product_name = db.Column(db.String(250), nullable=False)
     img_url = db.Column(db.String(1000), nullable=False)
 
+
 class ProductVariation(db.Model):
     __bind_key__ = 'fillespanje'
     __tablename__ = 'product_variation'
@@ -43,9 +45,31 @@ class ProductVariation(db.Model):
     meters = db.Column(db.String(250), nullable=False)
     price = db.Column(db.Float, nullable=False)
 
+class Flourocarbon(db.Model):
+    __bind_key__ = 'flourocarbon'
+    __tablename__ = 'flourocarbon'
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(1000), nullable=False)
+
+class ProductVariationFlourocarbon(db.Model):
+    __bind_key__ = 'flourocarbon'
+    __tablename__ = 'product_variation'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('flourocarbon.id'), nullable=False)
+    diameter = db.Column(db.String(250), nullable=False)
+    meters = db.Column(db.String(250), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+
 @app.route('/')
 def index():
     # Example usage
+    new = Flourocarbon(id=1, product_name="Tubertini Bos", img_url="https://www.tubertini.it/media/__sized__/images/24760-24767-Fluorocarbon-Bos-thumbnail-533x400-70.jpg")
+    new_2 = ProductVariationFlourocarbon(product_id=1, diameter=0.26, meters=50, price=1000)
+
+    db.session.add(new)
+    db.session.add(new_2)
+    db.session.commit()
     return render_template("index.html")
 
 @app.route('/fillespanje')
@@ -54,6 +78,15 @@ def fillespanje():
     for product in products:
         product.variations = db.session.query(ProductVariation).filter_by(product_id=product.id).all()
     return render_template("fillespanje.html", products=products)
+
+@app.route("/flourocarbon")
+def flourocarbon():
+    products = db.session.query(Flourocarbon).all()
+    print(products)
+    for product in products:
+        product.variations = db.session.query(ProductVariationFlourocarbon).filter_by(product_id=product.id).all()
+    return render_template("flourocarbon.html", products=products)
+
 
 @app.route('/product/<int:product_id>')
 def product_details(product_id):
@@ -159,14 +192,25 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
 
-        if user and user.password == form.password.data:
-            session['user_id'] = user.id
-            flash("You have successfully logged in!", 'success')
-            return redirect(url_for("index"))
+        if user.username == "admin" and user.password == "admin":
+            return redirect(url_for('dashboard'))
         else:
-            flash("Invalid email or password. Please try again.", 'danger')
+            if user and user.password == form.password.data:
+                session['user_id'] = user.id
+                flash("You have successfully logged in!", 'success')
+                return redirect(url_for("index"))
+            else:
+                flash("Invalid email or password. Please try again.", 'danger')
 
     return render_template("login.html", form=form)
+
+
+@app.route("/admin-dashboard")
+def dashboard():
+
+    return render_template("dashboard.html")
+
+
 
 if __name__ == '__main__':
     with app.app_context():
