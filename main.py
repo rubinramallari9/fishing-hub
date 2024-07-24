@@ -1,22 +1,22 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for, request, session
 from flask_sqlalchemy import SQLAlchemy
 
+
 class Config:
-    # Database URI for the 'users' database
     SQLALCHEMY_DATABASE_URI = 'sqlite:///users.db'
-
-    # Additional bindings for the 'fillespanje' database
     SQLALCHEMY_BINDS = {
-        'produktet': 'sqlite:///produketet.db'
+        'fillespanje': 'sqlite:///fillespanje.db'
     }
-
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.secret_key = 'your_secret_key'  # Needed for session management
 db = SQLAlchemy(app, session_options={"autoflush": False, "expire_on_commit": False})
 
-# Define a model for the 'users' database
+
+# Define your models here (User, Fillespanje, ProductVariation)
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -26,38 +26,106 @@ class User(db.Model):
 
 # Define a model for the 'fillespanje' database
 class Fillespanje(db.Model):
-    __bind_key__ = 'produktet'
-    __tablename__ = 'produktet'
+    __bind_key__ = 'fillespanje'
+    __tablename__ = 'fillespanje'
     id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(250), nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    type = db.Column(db.String(250), nullable=False)
-    types = db.Column(db.String(250), nullable=False)
     img_url = db.Column(db.String(1000), nullable=False)
+
+class ProductVariation(db.Model):
+    __bind_key__ = 'fillespanje'
+    __tablename__ = 'product_variation'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('fillespanje.id'), nullable=False)
+    diameter = db.Column(db.String(250), nullable=False)
+    meters = db.Column(db.String(250), nullable=False)
+    price = db.Column(db.Float, nullable=False)
 
 @app.route('/')
 def index():
-    # # Example usage: Adding entries to both databases
-    # user = User(username='testuser', email='test@example.com', password="test")
-    # fillespanje_item = Fillespanje(product_name='test', price=59.99,type="test" , types="0.22",  img_url="test")
-    #
-    # db.session.add(user)
-    # db.session.add(fillespanje_item)
-    # db.session.commit()
-    # db.session.close()
-
+    # Example usage
     return render_template("index.html")
+
 
 @app.route('/fillespanje')
 def fillespanje():
-    products = db.session.execute(db.select(Fillespanje).where(Fillespanje.type == "fillespanje")).scalars()
-    for i in products:
-        print(i.price)
-    return "Hello"
+    products = db.session.query(Fillespanje).all()
+    for product in products:
+        product.variations = db.session.query(ProductVariation).filter_by(product_id=product.id).all()
+    return render_template("fillespanje.html", products=products)
 
+
+@app.route('/product/<int:product_id>')
+def product_details(product_id):
+    product = db.session.query(Fillespanje).filter_by(id=product_id).first_or_404()
+    variations = db.session.query(ProductVariation).filter_by(product_id=product.id).all()
+
+    # Group variations by diameter and meters for easier handling in the template
+    diameter_variations = {}
+    meter_variations = {}
+
+    for variation in variations:
+        if variation.diameter not in diameter_variations:
+            diameter_variations[variation.diameter] = []
+        diameter_variations[variation.diameter].append(variation)
+
+        if variation.meters not in meter_variations:
+            meter_variations[variation.meters] = []
+        meter_variations[variation.meters].append(variation)
+
+    return render_template("product_details.html", product=product, diameter_variations=diameter_variations,
+                           meter_variations=meter_variations)
+@app.route('/get_price')
+def get_price():
+    product_id = request.args.get('product_id')
+    diameter = request.args.get('diameter')
+    meters = request.args.get('meters')
+
+    variation = db.session.query(ProductVariation).filter_by(
+        product_id=product_id, diameter=diameter, meters=meters
+    ).first()
+
+    if variation:
+        return {'price': variation.price}
+    else:
+        return {'price': None}
+
+
+@app.route('/add_to_cart', methods=['POST'])
+def add_to_cart():
+    product_id = request.form.get('product_id')
+    diameter = request.form.get('diameter')
+    meters = request.form.get('meters')
+
+    # Retrieve the selected variation
+    variation = db.session.query(ProductVariation).filter_by(
+        product_id=product_id, diameter=diameter, meters=meters
+    ).first()
+
+    # Store the cart item in the session
+    if 'cart' not in session:
+        session['cart'] = []
+
+    cart_item = {
+        'product_id': product_id,
+        'diameter': diameter,
+        'meters': meters,
+        'price': variation.price
+    }
+
+    session['cart'].append(cart_item)
+    session.modified = True
+
+    return redirect(url_for('cart'))
+
+
+@app.route('/cart')
+def cart():
+    cart_items = session.get('cart', [])
+    return render_template("cart.html", cart_items=cart_items)
 
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()  # Create tables for both databases
+        db.create_all()
     app.run(debug=True)

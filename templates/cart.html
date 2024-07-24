@@ -1,0 +1,21 @@
+{% include 'header.html' %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <h1 class="fw-bolder">Your Cart</h1>
+        <ul class="list-group">
+            {% for item in cart_items %}
+                <li class="list-group-item">
+                    Product ID: {{ item.product_id }}<br>
+                    Diameter: {{ item.diameter }}<br>
+                    Meters: {{ item.meters }}<br>
+                    Price: {{ item.price }} Lek
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endblock %}
+
+{% include 'footer.html' %}
