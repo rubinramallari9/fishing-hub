@@ -24,7 +24,7 @@
                 class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-                <li class="nav-item"><a class="nav-link active" aria-current="page" href="#!">Kreu</a></li>
+                <li class="nav-item"><a class="nav-link active" aria-current="page" href="{{url_for('index')}}">Kreu</a></li>
                 <li class="nav-item"><a class="nav-link" href="#!">Rreth nesh</a></li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button"
@@ -52,15 +52,10 @@
             <form class="d-flex">
                 <button class="btn btn-outline-dark" type="submit">
                     <i class="bi bi-box-arrow-in-right"></i>
-                    Regjistrohu
+                    <a href="{{url_for('signup')}}">Regjistrohu</a>
                 </button>
             </form>
         </div>
     </div>
 </nav>
 <!-- Header-->
-<header class="bg-dark py-5"
-        style="background-image: url('../static/assets/main_img.jpg'); background-size: cover; background-position: center; height: 50vh;">
-    <div class="container px-4 px-lg-5 my-5">
-    </div>
-</header>

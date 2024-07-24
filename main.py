@@ -1,6 +1,9 @@
-from flask import Flask, render_template, redirect, url_for, request, session
+from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_sqlalchemy import SQLAlchemy
-
+from flask_wtf import FlaskForm
+from wtforms import StringField, EmailField, SubmitField
+from wtforms.validators import DataRequired, Email
+from flask_bootstrap import Bootstrap4
 
 class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///users.db'
@@ -9,12 +12,11 @@ class Config:
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-
 app = Flask(__name__)
+Bootstrap4(app)
 app.config.from_object(Config)
 app.secret_key = 'your_secret_key'  # Needed for session management
 db = SQLAlchemy(app, session_options={"autoflush": False, "expire_on_commit": False})
-
 
 # Define your models here (User, Fillespanje, ProductVariation)
 class User(db.Model):
@@ -46,14 +48,12 @@ def index():
     # Example usage
     return render_template("index.html")
 
-
 @app.route('/fillespanje')
 def fillespanje():
     products = db.session.query(Fillespanje).all()
     for product in products:
         product.variations = db.session.query(ProductVariation).filter_by(product_id=product.id).all()
     return render_template("fillespanje.html", products=products)
-
 
 @app.route('/product/<int:product_id>')
 def product_details(product_id):
@@ -75,6 +75,7 @@ def product_details(product_id):
 
     return render_template("product_details.html", product=product, diameter_variations=diameter_variations,
                            meter_variations=meter_variations)
+
 @app.route('/get_price')
 def get_price():
     product_id = request.args.get('product_id')
@@ -89,7 +90,6 @@ def get_price():
         return {'price': variation.price}
     else:
         return {'price': None}
-
 
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
@@ -118,12 +118,55 @@ def add_to_cart():
 
     return redirect(url_for('cart'))
 
-
 @app.route('/cart')
 def cart():
     cart_items = session.get('cart', [])
     return render_template("cart.html", cart_items=cart_items)
 
+class MyForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = StringField('Password', validators=[DataRequired()])
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Enter')
+
+@app.route("/signup", methods=['GET', 'POST'])
+def signup():
+    form = MyForm()
+    if form.validate_on_submit():
+        existing_user = User.query.filter(
+            (User.username == form.username.data) | (User.email == form.email.data)
+        ).first()
+
+        if existing_user:
+            flash("Username or email already in use. Please choose a different one.", 'danger')
+            return redirect(url_for("signup"))
+
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            password=form.password.data
+        )
+        db.session.add(user)
+        db.session.commit()
+        flash("You have successfully signed up!", 'success')
+        return redirect(url_for("index"))
+
+    return render_template("signup.html", form=form)
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    form = MyForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+
+        if user and user.password == form.password.data:
+            session['user_id'] = user.id
+            flash("You have successfully logged in!", 'success')
+            return redirect(url_for("index"))
+        else:
+            flash("Invalid email or password. Please try again.", 'danger')
+
+    return render_template("login.html", form=form)
 
 if __name__ == '__main__':
     with app.app_context():
