@@ -63,39 +63,55 @@
     </div>
 </section>
 
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
-        <!-- Swiper Carousel -->
-        <div class="swiper-container">
-            <div class="swiper-wrapper">
-                <div class="swiper-slide">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQd_oVABUg7RYioSDANQGVPoKjo7H_qAjSTpA&s" class="img-fluid" alt="Image 1">
-                </div>
-                <div class="swiper-slide">
-                    <img src="https://seeklogo.com/images/T/tubertini-logo-634C890F9C-seeklogo.com.png" class="img-fluid" alt="Image 2">
-                </div>
-                <div class="swiper-slide">
-                    <img src="https://www.marg8up.com/trabucco.it/doc/Logo_Trabucco_2.jpg" class="img-fluid" alt="Image 3">
-                </div>
-                <div class="swiper-slide">
-                    <img src="https://www.rapturelures.com/eng/upload/doc/rapture.jpg" class="img-fluid" alt="Image 4">
-                </div>
-                <div class="swiper-slide">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpUysWbcJLnEss_m82fQ4QPPWdO8Fr6QeKWQ&s" class="img-fluid" alt="Image 5">
+        <!-- Swiper Carousel Container -->
+        <div class="swiper-wrapper-container">
+            <div class="swiper-container">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQd_oVABUg7RYioSDANQGVPoKjo7H_qAjSTpA&s" class="img-fluid" alt="Image 1">
+                    </div>
+                    <div class="swiper-slide">
+                        <img src="https://seeklogo.com/images/T/tubertini-logo-634C890F9C-seeklogo.com.png" class="img-fluid" alt="Image 2">
+                    </div>
+                    <div class="swiper-slide">
+                        <img src="https://www.marg8up.com/trabucco.it/doc/Logo_Trabucco_2.jpg" class="img-fluid" alt="Image 3">
+                    </div>
+                    <div class="swiper-slide">
+                        <img src="https://www.rapturelures.com/eng/upload/doc/rapture.jpg" class="img-fluid" alt="Image 4">
+                    </div>
+
+                    <div class="swiper-slide">
+                        <img src="https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/0007/7046/brand.gif?itok=p_MQUpBr" class="img-fluid" alt="Image 5">
+                    </div>
+                    <div class="swiper-slide">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0r54lT2SzmSbguwJOopS_rtc9tfznlNpBiw&s" class="img-fluid" alt="Image 5">
+                    </div>
+                    <div class="swiper-slide">
+                        <img src="https://www.fishing-mart.com.pl/storage/producer_logos/stonfo-o9.png" class="img-fluid" alt="Image 5">
+                    </div>
                 </div>
             </div>
-            <!-- Add Pagination -->
+            <!-- Add Pagination and Navigation -->
             <div class="swiper-pagination"></div>
-            <!-- Add Navigation -->
             <div class="swiper-button-next"></div>
             <div class="swiper-button-prev"></div>
         </div>
     </div>
 </section>
+
+<!-- Swiper JS -->
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<!-- Swiper JS -->
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script>
     var swiper = new Swiper('.swiper-container', {
-        slidesPerView: 4,
-        spaceBetween: 30,
+        slidesPerView: 3, // Adjust the number of slides shown
+        spaceBetween: 10, // Adjust space between slides
         loop: true,
         autoplay: {
             delay: 4000,
@@ -109,8 +125,85 @@
             nextEl: '.swiper-button-next',
             prevEl: '.swiper-button-prev',
         },
+        initialSlide: 2, // Set the third slide (index 2) as the starting point
+        breakpoints: {
+            640: {
+                slidesPerView: 1,
+            },
+            768: {
+                slidesPerView: 2,
+            },
+            1024: {
+                slidesPerView: 3,
+            }
+        }
     });
 </script>
+
+<style>
+    .swiper-wrapper-container {
+        position: relative;
+    }
+
+    .swiper-container {
+        width: 80%; /* Adjust width */
+        height: 200px; /* Adjust height */
+        margin: 0 auto; /* Center horizontally */
+    }
+
+    .swiper-slide {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    .swiper-slide img {
+        width: auto;
+        height: 100%; /* Make image fill height */
+        max-height: 200px; /* Ensure image doesn't exceed container height */
+        object-fit: contain; /* Maintain aspect ratio */
+    }
+
+    .swiper-button-next, .swiper-button-prev {
+        color: #000; /* Customize arrow color */
+        width: 30px; /* Adjust width */
+        height: 30px; /* Adjust height */
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+    }
+
+    .swiper-button-next {
+        right: 10px; /* Position to the right */
+    }
+
+    .swiper-button-prev {
+        left: 10px; /* Position to the left */
+    }
+
+    .swiper-pagination {
+        position: absolute;
+        bottom: 10px; /* Adjust bottom position */
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .swiper-pagination-bullet {
+        background: #000; /* Customize bullet color */
+        width: 8px; /* Adjust bullet width */
+        height: 8px; /* Adjust bullet height */
+    }
+
+    .swiper-pagination-bullet-active {
+        background: #ff0000; /* Customize active bullet color */
+    }
+</style>
+
+
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+
 {% endblock %}
 
 {% include 'footer.html' %}

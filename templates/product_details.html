@@ -1,65 +1,44 @@
 {% include 'header.html' %}
 
 {% block content %}
+
+
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row">
-            <div class="col-md-6">
-                <img class="img-fluid" src="{{ product.img_url }}" alt="..." />
+            <div class="col-lg-6">
+                <img class="img-fluid" src="{{ product.img_url }}" alt="{{ product.product_name }}" />
             </div>
-            <div class="col-md-6">
-                <h1 class="fw-bolder">{{ product.product_name }}</h1>
-                <form action="{{ url_for('add_to_cart') }}" method="POST">
-                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                    <input type="hidden" name="product_type" value="{{ product_type }}">
+            <div class="col-lg-6">
+                <h2 class="fw-bolder">Product Details</h2>
+                <!-- Product variations -->
+                {% for variation in variations %}
                     <div class="mb-3">
-                        <label for="diameter" class="form-label">Diameter</label>
-                        <select name="diameter" id="diameter" class="form-select" required>
-                            <option value="" disabled selected>Select diameter</option>
-                            {% for diameter, variations in diameter_variations.items() %}
-                                <option value="{{ diameter }}">{{ diameter }}</option>
-                            {% endfor %}
-                        </select>
+                        <h5>{{ variation.diameter }} - {{ variation.meters }} meters</h5>
+                        <p>Price: {{ variation.price }} Lek</p>
+
+                        <!-- Stock Bar -->
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{ (variation.stock / max_stock) * 100 }}%;" aria-valuenow="{{ variation.stock }}" aria-valuemin="0" aria-valuemax="{{ max_stock }}">
+                                {{ variation.stock }} / {{ max_stock }} in stock
+                            </div>
+                        </div>
+
+                        <!-- Add to Cart Button -->
+                        <form action="{{ url_for('add_to_cart') }}" method="post">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="product_type" value="{{ product_type }}">
+                            <input type="hidden" name="diameter" value="{{ variation.diameter }}">
+                            <input type="hidden" name="meters" value="{{ variation.meters }}">
+                            <button type="submit" class="btn btn-outline-dark mt-3" {% if variation.stock <= 0 %}disabled{% endif %}>Add to Cart</button>
+                        </form>
                     </div>
-                    <div class="mb-3">
-                        <label for="meters" class="form-label">Meters</label>
-                        <select name="meters" id="meters" class="form-select" required>
-                            <option value="" disabled selected>Select meters</option>
-                            {% for meters, variations in meter_variations.items() %}
-                                <option value="{{ meters }}">{{ meters }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="price" class="form-label">Price</label>
-                        <input type="text" id="price" class="form-control" readonly>
-                    </div>
-                    <button type="submit" class="btn btn-outline-dark mt-auto">Add to cart</button>
-                </form>
+                {% endfor %}
             </div>
         </div>
     </div>
 </section>
 
-<script>
-document.getElementById('diameter').addEventListener('change', updatePrice);
-document.getElementById('meters').addEventListener('change', updatePrice);
-
-function updatePrice() {
-    const diameter = document.getElementById('diameter').value;
-    const meters = document.getElementById('meters').value;
-
-    if (diameter && meters) {
-        fetch(`/get_price?product_id={{ product.id }}&product_type={{ product_type }}&diameter=${diameter}&meters=${meters}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('price').value = data.price ? data.price + ' Lek' : 'Price not available';
-            });
-    } else {
-        document.getElementById('price').value = '';
-    }
-}
-</script>
 {% endblock %}
 
 {% include 'footer.html' %}

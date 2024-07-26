@@ -36,6 +36,13 @@ class Fillespanje(db.Model):
     img_url = db.Column(db.String(1000), nullable=False)
 
 
+class Flourocarbon(db.Model):
+    __bind_key__ = 'flourocarbon'
+    __tablename__ = 'flourocarbon'
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(1000), nullable=False)
+
 class ProductVariation(db.Model):
     __bind_key__ = 'fillespanje'
     __tablename__ = 'product_variation'
@@ -44,13 +51,7 @@ class ProductVariation(db.Model):
     diameter = db.Column(db.String(250), nullable=False)
     meters = db.Column(db.String(250), nullable=False)
     price = db.Column(db.Float, nullable=False)
-
-class Flourocarbon(db.Model):
-    __bind_key__ = 'flourocarbon'
-    __tablename__ = 'flourocarbon'
-    id = db.Column(db.Integer, primary_key=True)
-    product_name = db.Column(db.String(250), nullable=False)
-    img_url = db.Column(db.String(1000), nullable=False)
+    stock = db.Column(db.Integer, nullable=False, default=0)  # Add stock column
 
 class ProductVariationFlourocarbon(db.Model):
     __bind_key__ = 'flourocarbon'
@@ -60,26 +61,27 @@ class ProductVariationFlourocarbon(db.Model):
     diameter = db.Column(db.String(250), nullable=False)
     meters = db.Column(db.String(250), nullable=False)
     price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False, default=0)  # Add stock column
+
 
 @app.route('/')
 def index():
-    # Example usage
-
     return render_template("index.html")
 
 @app.route('/fillespanje')
 def fillespanje():
     products = db.session.query(Fillespanje).all()
     for product in products:
-        product.variations = db.session.query(ProductVariation).filter_by(product_id=product.id).all()
+        variations = db.session.query(ProductVariation).filter_by(product_id=product.id).all()
+        product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("fillespanje.html", products=products)
 
 @app.route("/flourocarbon")
 def flourocarbon():
     products = db.session.query(Flourocarbon).all()
-    print(products)
     for product in products:
-        product.variations = db.session.query(ProductVariationFlourocarbon).filter_by(product_id=product.id).all()
+        variations = db.session.query(ProductVariationFlourocarbon).filter_by(product_id=product.id).all()
+        product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("flourocarbon.html", products=products)
 
 
@@ -94,21 +96,11 @@ def product_details(product_type, product_id):
     else:
         return redirect(url_for('index'))  # Redirect to home if product_type is invalid
 
-    # Group variations by diameter and meters for easier handling in the template
-    diameter_variations = {}
-    meter_variations = {}
+    # Determine the maximum stock value
+    max_stock = max((variation.stock for variation in variations), default=1)
 
-    for variation in variations:
-        if variation.diameter not in diameter_variations:
-            diameter_variations[variation.diameter] = []
-        diameter_variations[variation.diameter].append(variation)
+    return render_template("product_details.html", product=product, variations=variations, product_type=product_type, max_stock=max_stock)
 
-        if variation.meters not in meter_variations:
-            meter_variations[variation.meters] = []
-        meter_variations[variation.meters].append(variation)
-
-    return render_template("product_details.html", product=product, diameter_variations=diameter_variations,
-                           meter_variations=meter_variations, product_type=product_type)
 
 @app.route('/get_price')
 def get_price():

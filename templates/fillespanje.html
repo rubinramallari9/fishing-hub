@@ -21,16 +21,21 @@
                             <div class="text-center">
                                 <!-- Product name-->
                                 <h5 class="fw-bolder">{{ product.product_name }}</h5>
+
                                 <!-- Product variations-->
-<!--                                {% for variation in product.variations %}-->
-<!--                                    <p>{{ variation.diameter }} - {{ variation.meters }} meters: {{ variation.price }} Lek</p>-->
-<!--                                {% endfor %}-->
+                                {% for variation in product.variations %}
+                                    <p>{{ variation.diameter }} - {{ variation.meters }} meters: {{ variation.price }} Lek (Stock: {{ variation.stock }})</p>
+                                {% endfor %}
                             </div>
                         </div>
                         <!-- Product actions-->
                         <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
                             <div class="text-center">
-                                <a class="btn btn-outline-dark mt-auto" href="{{ url_for('product_details', product_type='fillespanje', product_id=product.id) }}">View Details</a>
+                                {% if product.has_stock %}
+                                    <a class="btn btn-outline-dark mt-auto" href="{{ url_for('product_details', product_type='fillespanje', product_id=product.id) }}">View Details</a>
+                                {% else %}
+                                    <span class="btn btn-outline-secondary mt-auto">Out of Stock</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
