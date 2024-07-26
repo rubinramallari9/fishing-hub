@@ -64,12 +64,7 @@ class ProductVariationFlourocarbon(db.Model):
 @app.route('/')
 def index():
     # Example usage
-    new = Flourocarbon(id=1, product_name="Tubertini Bos", img_url="https://www.tubertini.it/media/__sized__/images/24760-24767-Fluorocarbon-Bos-thumbnail-533x400-70.jpg")
-    new_2 = ProductVariationFlourocarbon(product_id=1, diameter=0.26, meters=50, price=1000)
 
-    db.session.add(new)
-    db.session.add(new_2)
-    db.session.commit()
     return render_template("index.html")
 
 @app.route('/fillespanje')
@@ -88,10 +83,16 @@ def flourocarbon():
     return render_template("flourocarbon.html", products=products)
 
 
-@app.route('/product/<int:product_id>')
-def product_details(product_id):
-    product = db.session.query(Fillespanje).filter_by(id=product_id).first_or_404()
-    variations = db.session.query(ProductVariation).filter_by(product_id=product.id).all()
+@app.route('/product/<string:product_type>/<int:product_id>')
+def product_details(product_type, product_id):
+    if product_type == 'fillespanje':
+        product = db.session.query(Fillespanje).filter_by(id=product_id).first_or_404()
+        variations = db.session.query(ProductVariation).filter_by(product_id=product.id).all()
+    elif product_type == 'flourocarbon':
+        product = db.session.query(Flourocarbon).filter_by(id=product_id).first_or_404()
+        variations = db.session.query(ProductVariationFlourocarbon).filter_by(product_id=product.id).all()
+    else:
+        return redirect(url_for('index'))  # Redirect to home if product_type is invalid
 
     # Group variations by diameter and meters for easier handling in the template
     diameter_variations = {}
@@ -107,33 +108,50 @@ def product_details(product_id):
         meter_variations[variation.meters].append(variation)
 
     return render_template("product_details.html", product=product, diameter_variations=diameter_variations,
-                           meter_variations=meter_variations)
+                           meter_variations=meter_variations, product_type=product_type)
 
 @app.route('/get_price')
 def get_price():
     product_id = request.args.get('product_id')
+    product_type = request.args.get('product_type')
     diameter = request.args.get('diameter')
     meters = request.args.get('meters')
 
-    variation = db.session.query(ProductVariation).filter_by(
-        product_id=product_id, diameter=diameter, meters=meters
-    ).first()
+    if product_type == 'fillespanje':
+        variation = db.session.query(ProductVariation).filter_by(
+            product_id=product_id, diameter=diameter, meters=meters
+        ).first()
+    elif product_type == 'flourocarbon':
+        variation = db.session.query(ProductVariationFlourocarbon).filter_by(
+            product_id=product_id, diameter=diameter, meters=meters
+        ).first()
+    else:
+        return {'price': None}
 
     if variation:
         return {'price': variation.price}
     else:
         return {'price': None}
 
+
 @app.route('/add_to_cart', methods=['POST'])
 def add_to_cart():
     product_id = request.form.get('product_id')
+    product_type = request.form.get('product_type')
     diameter = request.form.get('diameter')
     meters = request.form.get('meters')
 
     # Retrieve the selected variation
-    variation = db.session.query(ProductVariation).filter_by(
-        product_id=product_id, diameter=diameter, meters=meters
-    ).first()
+    if product_type == 'fillespanje':
+        variation = db.session.query(ProductVariation).filter_by(
+            product_id=product_id, diameter=diameter, meters=meters
+        ).first()
+    elif product_type == 'flourocarbon':
+        variation = db.session.query(ProductVariationFlourocarbon).filter_by(
+            product_id=product_id, diameter=diameter, meters=meters
+        ).first()
+    else:
+        return redirect(url_for('cart'))  # Redirect to cart if product_type is invalid
 
     # Store the cart item in the session
     if 'cart' not in session:
@@ -141,6 +159,7 @@ def add_to_cart():
 
     cart_item = {
         'product_id': product_id,
+        'product_type': product_type,
         'diameter': diameter,
         'meters': meters,
         'price': variation.price
@@ -150,6 +169,7 @@ def add_to_cart():
     session.modified = True
 
     return redirect(url_for('cart'))
+
 
 @app.route('/cart')
 def cart():

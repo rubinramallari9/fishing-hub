@@ -11,6 +11,7 @@
                 <h1 class="fw-bolder">{{ product.product_name }}</h1>
                 <form action="{{ url_for('add_to_cart') }}" method="POST">
                     <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <input type="hidden" name="product_type" value="{{ product_type }}">
                     <div class="mb-3">
                         <label for="diameter" class="form-label">Diameter</label>
                         <select name="diameter" id="diameter" class="form-select" required>
@@ -49,7 +50,7 @@ function updatePrice() {
     const meters = document.getElementById('meters').value;
 
     if (diameter && meters) {
-        fetch(`/get_price?product_id={{ product.id }}&diameter=${diameter}&meters=${meters}`)
+        fetch(`/get_price?product_id={{ product.id }}&product_type={{ product_type }}&diameter=${diameter}&meters=${meters}`)
             .then(response => response.json())
             .then(data => {
                 document.getElementById('price').value = data.price ? data.price + ' Lek' : 'Price not available';

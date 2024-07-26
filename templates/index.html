@@ -2,7 +2,7 @@
 
 {% block content %}
 <header class="bg-dark py-5"
-        style="background-image: url('../static/assets/main_img.jpg'); background-size: cover; background-position: center; height: 50vh;">
+        style="background-image: url('{{ url_for('static', filename='assets/main_img.jpg') }}'); background-size: cover; background-position: center; height: 50vh;">
     <div class="container px-4 px-lg-5 my-5">
     </div>
 </header>
@@ -62,6 +62,55 @@
         </div>
     </div>
 </section>
+
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <!-- Swiper Carousel -->
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQd_oVABUg7RYioSDANQGVPoKjo7H_qAjSTpA&s" class="img-fluid" alt="Image 1">
+                </div>
+                <div class="swiper-slide">
+                    <img src="https://seeklogo.com/images/T/tubertini-logo-634C890F9C-seeklogo.com.png" class="img-fluid" alt="Image 2">
+                </div>
+                <div class="swiper-slide">
+                    <img src="https://www.marg8up.com/trabucco.it/doc/Logo_Trabucco_2.jpg" class="img-fluid" alt="Image 3">
+                </div>
+                <div class="swiper-slide">
+                    <img src="https://www.rapturelures.com/eng/upload/doc/rapture.jpg" class="img-fluid" alt="Image 4">
+                </div>
+                <div class="swiper-slide">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpUysWbcJLnEss_m82fQ4QPPWdO8Fr6QeKWQ&s" class="img-fluid" alt="Image 5">
+                </div>
+            </div>
+            <!-- Add Pagination -->
+            <div class="swiper-pagination"></div>
+            <!-- Add Navigation -->
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+        </div>
+    </div>
+</section>
+<script>
+    var swiper = new Swiper('.swiper-container', {
+        slidesPerView: 4,
+        spaceBetween: 30,
+        loop: true,
+        autoplay: {
+            delay: 4000,
+            disableOnInteraction: false,
+        },
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+    });
+</script>
 {% endblock %}
 
 {% include 'footer.html' %}
