@@ -247,7 +247,9 @@ def dashboard():
 
     return render_template("dashboard.html")
 
-
+@app.route("/kontakto")
+def kontakto():
+    return render_template("kontakto.html")
 
 if __name__ == '__main__':
     with app.app_context():
