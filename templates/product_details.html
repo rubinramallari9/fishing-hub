@@ -2,7 +2,6 @@
 
 {% block content %}
 
-
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row">
@@ -10,7 +9,7 @@
                 <img class="img-fluid" src="{{ product.img_url }}" alt="{{ product.product_name }}" />
             </div>
             <div class="col-lg-6">
-                <h2 class="fw-bolder">Product Details</h2>
+                <h2 class="fw-bolder">{{ product.product_name }}</h2>
                 <form id="productForm">
                     <!-- Product variations -->
                     <div class="mb-3">
@@ -33,6 +32,11 @@
                         <p id="stockText"></p>
                     </div>
 
+                    <!-- Price Info -->
+                    <div class="mb-3" id="priceInfo" style="display: none;">
+                        <h4>Price: <span id="priceText"></span> Lek</h4>
+                    </div>
+
                     <!-- Add to Cart Button -->
                     <button type="submit" id="addToCartBtn" class="btn btn-outline-dark mt-3" disabled>Add to Cart</button>
                 </form>
@@ -51,6 +55,8 @@
         var stockBar = document.getElementById('stockBar');
         var stockText = document.getElementById('stockText');
         var stockInfo = document.getElementById('stockInfo');
+        var priceInfo = document.getElementById('priceInfo');
+        var priceText = document.getElementById('priceText');
         var addToCartBtn = document.getElementById('addToCartBtn');
 
         if (stock && price) {
@@ -61,7 +67,10 @@
             stockBar.setAttribute('aria-valuenow', stock);
             stockText.textContent = stock + ' in stock';
 
+            priceText.textContent = price;
+
             stockInfo.style.display = 'block';
+            priceInfo.style.display = 'block';
 
             if (stock > 0) {
                 addToCartBtn.disabled = false;
