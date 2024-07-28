@@ -11,33 +11,66 @@
             </div>
             <div class="col-lg-6">
                 <h2 class="fw-bolder">Product Details</h2>
-                <!-- Product variations -->
-                {% for variation in variations %}
+                <form id="productForm">
+                    <!-- Product variations -->
                     <div class="mb-3">
-                        <h5>{{ variation.diameter }} - {{ variation.meters }} meters</h5>
-                        <p>Price: {{ variation.price }} Lek</p>
-
-                        <!-- Stock Bar -->
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: {{ (variation.stock / max_stock) * 100 }}%;" aria-valuenow="{{ variation.stock }}" aria-valuemin="0" aria-valuemax="{{ max_stock }}">
-                                {{ variation.stock }} / {{ max_stock }} in stock
-                            </div>
-                        </div>
-
-                        <!-- Add to Cart Button -->
-                        <form action="{{ url_for('add_to_cart') }}" method="post">
-                            <input type="hidden" name="product_id" value="{{ product.id }}">
-                            <input type="hidden" name="product_type" value="{{ product_type }}">
-                            <input type="hidden" name="diameter" value="{{ variation.diameter }}">
-                            <input type="hidden" name="meters" value="{{ variation.meters }}">
-                            <button type="submit" class="btn btn-outline-dark mt-3" {% if variation.stock <= 0 %}disabled{% endif %}>Add to Cart</button>
-                        </form>
+                        <label for="variationSelect" class="form-label">Select Variation</label>
+                        <select id="variationSelect" class="form-select" onchange="updateStockInfo()">
+                            <option value="" disabled selected>Select your option</option>
+                            {% for variation in variations %}
+                                <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
+                                    {{ variation.diameter }} - {{ variation.meters }} meters
+                                </option>
+                            {% endfor %}
+                        </select>
                     </div>
-                {% endfor %}
+
+                    <!-- Stock Bar -->
+                    <div class="mb-3" id="stockInfo" style="display: none;">
+                        <div class="progress">
+                            <div id="stockBar" class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ max_stock }}"></div>
+                        </div>
+                        <p id="stockText"></p>
+                    </div>
+
+                    <!-- Add to Cart Button -->
+                    <button type="submit" id="addToCartBtn" class="btn btn-outline-dark mt-3" disabled>Add to Cart</button>
+                </form>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+    function updateStockInfo() {
+        var select = document.getElementById('variationSelect');
+        var selectedOption = select.options[select.selectedIndex];
+        var stock = selectedOption.getAttribute('data-stock');
+        var price = selectedOption.getAttribute('data-price');
+
+        var stockBar = document.getElementById('stockBar');
+        var stockText = document.getElementById('stockText');
+        var stockInfo = document.getElementById('stockInfo');
+        var addToCartBtn = document.getElementById('addToCartBtn');
+
+        if (stock && price) {
+            var maxStock = parseInt(stockBar.getAttribute('aria-valuemax'));
+            var stockPercentage = (stock / maxStock) * 100;
+
+            stockBar.style.width = stockPercentage + '%';
+            stockBar.setAttribute('aria-valuenow', stock);
+            stockText.textContent = stock + ' in stock';
+
+            stockInfo.style.display = 'block';
+
+            if (stock > 0) {
+                addToCartBtn.disabled = false;
+            } else {
+                addToCartBtn.disabled = true;
+            }
+        }
+    }
+</script>
 
 {% endblock %}
 
