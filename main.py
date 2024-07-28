@@ -9,9 +9,11 @@ class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///users.db'
     SQLALCHEMY_BINDS = {
         'fillespanje': 'sqlite:///fillespanje.db',
-        'flourocarbon': 'sqlite:///flourocarbon.db'
+        'flourocarbon': 'sqlite:///flourocarbon.db',
+        'shockleader': 'sqlite:///shockleader.db'  # Add this line
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 
 app = Flask(__name__)
 Bootstrap4(app)
@@ -63,6 +65,23 @@ class ProductVariationFlourocarbon(db.Model):
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False, default=0)  # Add stock column
 
+class Shockleader(db.Model):
+    __bind_key__ = 'shockleader'
+    __tablename__ = 'shockleader'
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(1000), nullable=False)
+
+class ProductVariationShockleader(db.Model):
+    __bind_key__ = 'shockleader'
+    __tablename__ = 'product_variation'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('shockleader.id'), nullable=False)
+    diameter = db.Column(db.String(250), nullable=False)  # Updated as string
+    meters = db.Column(db.String(250), nullable=False)  # Updated as string
+    price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False, default=0)  # Add stock column
+
 
 @app.route('/')
 def index():
@@ -84,6 +103,13 @@ def flourocarbon():
         product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("flourocarbon.html", products=products)
 
+@app.route('/shockleader')
+def shockleader():
+    products = db.session.query(Shockleader).all()
+    for product in products:
+        variations = db.session.query(ProductVariationShockleader).filter_by(product_id=product.id).all()
+        product.has_stock = any(v.stock > 0 for v in variations)
+    return render_template("shockleader.html", products=products)
 
 @app.route('/product/<string:product_type>/<int:product_id>')
 def product_details(product_type, product_id):
@@ -93,15 +119,14 @@ def product_details(product_type, product_id):
     elif product_type == 'flourocarbon':
         product = db.session.query(Flourocarbon).filter_by(id=product_id).first_or_404()
         variations = db.session.query(ProductVariationFlourocarbon).filter_by(product_id=product.id).all()
+    elif product_type == 'shockleader':
+        product = db.session.query(Shockleader).filter_by(id=product_id).first_or_404()
+        variations = db.session.query(ProductVariationShockleader).filter_by(product_id=product.id).all()
     else:
         return redirect(url_for('index'))  # Redirect to home if product_type is invalid
 
-    # Determine the maximum stock value
     max_stock = max((variation.stock for variation in variations), default=1)
-
     return render_template("product_details.html", product=product, variations=variations, product_type=product_type, max_stock=max_stock)
-
-
 @app.route('/get_price')
 def get_price():
     product_id = request.args.get('product_id')
@@ -228,3 +253,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
