@@ -4,6 +4,10 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, EmailField, SubmitField, SelectField, FloatField, IntegerField
 from wtforms.validators import DataRequired, Email
 from flask_bootstrap import Bootstrap4
+import random
+from sqlalchemy import func
+
+
 
 class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///users.db'
@@ -239,11 +243,39 @@ class MakinetaVariation(db.Model):
 
     product = db.relationship('MakinetaProduct', backref=db.backref('variations', lazy=True))
 
+
+product_models = {
+    'fillespanje': (Fillespanje, ProductVariation),
+    'flourocarbon': (Flourocarbon, ProductVariationFlourocarbon),
+    'shockleader': (Shockleader, ProductVariationShockleader),
+    'allround': (Allround, ProductVariationAllround),
+    'surfcasting': (Surfcasting, ProductVariationSurfcasting),
+    'beach': (Beach, ProductVariationBeach),
+    'spinning': (Spinning, ProductVariationSpinning),
+    'bolognese': (Bolognese, ProductVariationBolognese),
+    'jigg': (Jigg, ProductVariationJigg),
+    'bolentino': (Bolentino, ProductVariationBolentino),
+    'makineta': (MakinetaProduct, MakinetaVariation)
+}
+def get_price_range(variations):
+    prices = [variation.price for variation in variations]
+    if not prices:
+        return ""
+    min_price, max_price = min(prices), max(prices)
+    return f"${min_price:.2f} - ${max_price:.2f}" if min_price != max_price else f"${min_price:.2f}"
+
 @app.route('/')
 def index():
+    categories = ['fillespanje','flourocarbon','shockleader','spinning', 'allround', 'surfcasting', 'bolognese', 'bolentino', 'jigg', 'makineta']
+    random_products = {}
 
-    return render_template("index.html")
+    for category in categories:
+        product_model, _ = product_models[category]
+        product = db.session.query(product_model).order_by(func.random()).first()
+        if product:
+            random_products[category] = product
 
+    return render_template('index.html', random_products=random_products)
 @app.route('/fillespanje')
 def fillespanje():
     products = db.session.query(Fillespanje).all()
@@ -583,17 +615,11 @@ def makineta():
 def kontakto():
     return render_template("kontakto.html")
 
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        # Add a test product
-        product = MakinetaProduct(product_name="Test Makineta", img_url="url_to_image",
-                                  description="Description of test makineta")
-        db.session.add(product)
-        db.session.commit()
 
-        variation = MakinetaVariation(product_id=product.id, size="Large", price=100.0, stock=10)
-        db.session.add(variation)
-        db.session.commit()
     app.run(debug=True)
 
