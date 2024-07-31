@@ -221,6 +221,24 @@ class ProductVariationBolentino(db.Model):
     product = db.relationship('Bolentino', backref=db.backref('variations', lazy=True))
 
 
+class MakinetaProduct(db.Model):
+    __tablename__ = 'makineta_product'
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(100), nullable=False)
+    img_url = db.Column(db.String(200), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+
+
+class MakinetaVariation(db.Model):
+    __tablename__ = 'makineta_variation'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('makineta_product.id'), nullable=False)
+    size = db.Column(db.String(50), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False)
+
+    product = db.relationship('MakinetaProduct', backref=db.backref('variations', lazy=True))
+
 @app.route('/')
 def index():
 
@@ -320,7 +338,8 @@ def product_details(product_type, product_id):
         'spinning': (Spinning, ProductVariationSpinning),
         'bolognese': (Bolognese, ProductVariationBolognese),
         'jigg': (Jigg, ProductVariationJigg),
-        'bolentino': (Bolentino, ProductVariationBolentino)
+        'bolentino': (Bolentino, ProductVariationBolentino),
+        'makineta': (MakinetaProduct, MakinetaVariation)
     }
     if product_type not in product_models:
         return redirect(url_for('index'))  # Redirect to home if product_type is invalid
@@ -333,7 +352,8 @@ def product_details(product_type, product_id):
     variation_fields = {
         'diameter': 'Diameter',
         'meters': 'Meters',
-        'action': 'Action'
+        'action': 'Action',
+        'size': 'Size'
     }
 
     # Determine the relevant fields based on the product type
@@ -344,9 +364,11 @@ def product_details(product_type, product_id):
         relevant_fields.append('meters')
     if hasattr(variation_model, 'action'):
         relevant_fields.append('action')
+    if hasattr(variation_model, 'size'):
+        relevant_fields.append('size')
 
-    return render_template("product_details.html", product=product, variations=variations, product_type=product_type, max_stock=max_stock, relevant_fields=relevant_fields, variation_fields=variation_fields)
-
+    return render_template("product_details.html", product=product, variations=variations, product_type=product_type,
+                           max_stock=max_stock, relevant_fields=relevant_fields, variation_fields=variation_fields)
 
 @app.route('/get_price')
 def get_price():
@@ -547,6 +569,16 @@ def edit_product(product_type, product_id):
 
     return render_template('edit_product.html', form=form, product_type=product_type, product_id=product_id)
 
+
+@app.route("/makineta")
+def makineta():
+    products = db.session.query(MakinetaProduct).all()
+    for product in products:
+        variations = db.session.query(MakinetaVariation).filter_by(product_id=product.id).all()
+        product.has_stock = any(v.stock > 0 for v in variations)
+    return render_template("makineta.html", products=products)
+
+
 @app.route("/kontakto")
 def kontakto():
     return render_template("kontakto.html")
@@ -554,6 +586,14 @@ def kontakto():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # Add a test product
+        product = MakinetaProduct(product_name="Test Makineta", img_url="url_to_image",
+                                  description="Description of test makineta")
+        db.session.add(product)
+        db.session.commit()
 
+        variation = MakinetaVariation(product_id=product.id, size="Large", price=100.0, stock=10)
+        db.session.add(variation)
+        db.session.commit()
     app.run(debug=True)
 

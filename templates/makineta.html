@@ -4,7 +4,7 @@
 <header class="bg-dark py-5"
         style="background-image: url('../static/assets/1.jpg'); background-size: cover; background-position: center; height: 50vh;">
     <div class="container px-4 px-lg-5 my-5 d-flex align-items-center justify-content-center" style="height: 100%;">
-        <h1 class="text-white fw-bold">Fillespanje</h1>
+        <h1 class="text-white fw-bold">Makineta</h1>
     </div>
 </header>
 
@@ -23,14 +23,16 @@
                                 <h5 class="fw-bolder">{{ product.product_name }}</h5>
 
                                 <!-- Product variations-->
-
+                                {% for variation in product.variations %}
+                                    <p>{{ variation.diameter }} - {{ variation.meters }} meters: {{ variation.price }} Lek (Stock: {{ variation.stock }})</p>
+                                {% endfor %}
                             </div>
                         </div>
                         <!-- Product actions-->
                         <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
                             <div class="text-center">
                                 {% if product.has_stock %}
-                                    <a class="btn btn-outline-dark mt-auto" href="{{ url_for('product_details', product_type='fillespanje', product_id=product.id) }}">View Details</a>
+                                    <a class="btn btn-outline-dark mt-auto" href="{{ url_for('product_details', product_type='makineta', product_id=product.id) }}">View Details</a>
                                 {% else %}
                                     <span class="btn btn-outline-secondary mt-auto">Out of Stock</span>
                                 {% endif %}

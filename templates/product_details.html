@@ -1,3 +1,5 @@
+<!-- templates/product_details.html -->
+
 {% include 'header.html' %}
 
 {% block content %}
@@ -17,15 +19,11 @@
                         <select id="variationSelect" class="form-select" onchange="updateStockInfo()">
                             <option value="" disabled selected>Select your option</option>
                             {% for variation in variations %}
-                                {% if product_type == 'spinning' %}
-                                    <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
-                                        {{ variation.action }} - {{ variation.meters }} meters
-                                    </option>
-                                {% else %}
-                                    <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
-                                        {{ variation.diameter }} - {{ variation.meters }} meters
-                                    </option>
-                                {% endif %}
+                                <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
+                                    {% for field in relevant_fields %}
+                                        {{ variation[field] }} {% if not loop.last %} - {% endif %}
+                                    {% endfor %}
+                                </option>
                             {% endfor %}
                         </select>
                     </div>
