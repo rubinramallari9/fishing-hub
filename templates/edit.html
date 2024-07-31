@@ -1,0 +1,16 @@
+{% include 'header.html' %}
+{% block content %}
+<h1>Edit Product</h1>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <p>{{ form.product_name.label }} {{ form.product_name() }}</p>
+    <p>{{ form.img_url.label }} {{ form.img_url() }}</p>
+    <p>{{ form.category.label }} {{ form.category() }}</p>
+    <p>{{ form.diameter.label }} {{ form.diameter() }}</p>
+    <p>{{ form.meters.label }} {{ form.meters() }}</p>
+    <p>{{ form.price.label }} {{ form.price() }}</p>
+    <p>{{ form.stock.label }} {{ form.stock() }}</p>
+    <p>{{ form.submit() }}</p>
+</form>
+{% endblock %}
+{%include 'footer.html'%}

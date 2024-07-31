@@ -1,1 +1,7 @@
-Hello
+{% include 'header.html' %}
+{% block content %}
+<h1>Admin Dashboard</h1>
+<a href="{{ url_for('add_product') }}">Add Product</a>
+<!-- List products here with edit links -->
+{% endblock %}
+{% include 'footer.html' %}

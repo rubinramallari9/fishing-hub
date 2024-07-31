@@ -17,9 +17,15 @@
                         <select id="variationSelect" class="form-select" onchange="updateStockInfo()">
                             <option value="" disabled selected>Select your option</option>
                             {% for variation in variations %}
-                                <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
-                                    {{ variation.diameter }} - {{ variation.meters }} meters
-                                </option>
+                                {% if product_type == 'spinning' %}
+                                    <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
+                                        {{ variation.action }} - {{ variation.meters }} meters
+                                    </option>
+                                {% else %}
+                                    <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
+                                        {{ variation.diameter }} - {{ variation.meters }} meters
+                                    </option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
