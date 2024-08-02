@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, EmailField, SubmitField, SelectField, FloatField, IntegerField
+from wtforms import StringField, EmailField, SubmitField, SelectField, FloatField, IntegerField, TextAreaField
 from wtforms.validators import DataRequired, Email
 from flask_bootstrap import Bootstrap4
 from random import sample
@@ -520,15 +520,25 @@ def login():
 
     return render_template("login.html", form=form)
 class ProductForm(FlaskForm):
-    product_name = StringField('Product Name', validators=[DataRequired()])
-    img_url = StringField('Image URL', validators=[DataRequired()])
-    category = SelectField('Category', choices=[('fillespanje', 'Fillespanje'), ('flourocarbon', 'Flourocarbon'), ('shockleader', 'Shockleader'), ('allround', 'Allround'), ('surfcasting', 'Surfcasting'), ('beach', 'Beach'), ('spinning', 'Spinning'), ('bolognese', 'Bolognese'), ('jigg', 'Jigg'), ('bolentino', 'Bolentino')], validators=[DataRequired()])
-    diameter = StringField('Diameter', validators=[DataRequired()])
-    meters = StringField('Meters', validators=[DataRequired()])
+    name = StringField('Name', validators=[DataRequired()])
+    id = IntegerField('Id', validators=[DataRequired()])
     price = FloatField('Price', validators=[DataRequired()])
     stock = IntegerField('Stock', validators=[DataRequired()])
+    img_url = StringField('Image', validators=[DataRequired()])
+    category = SelectField('Category', choices=[
+        ('fillespanje', 'Fillespanje'),
+        ('flourocarbon', 'Flourocarbon'),
+        ('shockleader', 'Shock Leader'),
+        ('allround', 'All Round'),
+        ('surfcasting', 'Surfcasting'),
+        ('spinning', 'Spinning'),
+        ('bolognese', 'Bolognese'),
+        ('jigg', 'Jigg'),
+        ('bolentino', 'Bolentino'),
+        ('makineta', 'Makineta')
+    ], validators=[DataRequired()])
+    description = TextAreaField('Description')
     submit = SubmitField('Submit')
-
 
 @app.route('/dashboard')
 def dashboard():
@@ -542,36 +552,48 @@ def dashboard():
 
 @app.route('/dashboard/add_product', methods=['GET', 'POST'])
 def add_product():
-    # if not session.get('user_id'):
-    #     return redirect(url_for('login'))
-    # user = User.query.get(session['user_id'])
-    # if not user or not user.is_admin:
-    #     return redirect(url_for('index'))
-
     form = ProductForm()
     if form.validate_on_submit():
         category = form.category.data
-        product_model, variation_model = product_models[category]
-
-        product = product_model(product_name=form.product_name.data, img_url=form.img_url.data)
+        name = form.name.data
+        id = form.id.data
+        price = form.price.data
+        stock = form.stock.data
+        img = form.img_url.data
+        description = form.description.data
+        print(f"Category: {category}")
+        print(f"Name: {name}")
+        print(f"Price: {price}")
+        print(f"Stock: {stock}")
+        print(f"Description: {description}")
+        print(f"Variations: {variations_data}")
+        print(name)
+        variations_data = request.form.getlist('variations')  # Get all variations data from form
+        print(variations_data)
+        product = Makineta(
+            product_id=id,
+            product_name=name,
+            img_url=img,  # Replace with actual URL or logic
+            description=description
+        )
         db.session.add(product)
         db.session.commit()
-
-        variation = variation_model(
-            product_id=product.id,
-            diameter=form.diameter.data,
-            meters=form.meters.data,
-            price=form.price.data,
-            stock=form.stock.data
-        )
-        db.session.add(variation)
+        # Handle multiple variations
+        for variation_data in variations_data:
+            variation = ProductVariationMakineta(
+                product_id=id,
+                price=variation_data.get('price'),
+                stock=variation_data.get('stock'),
+                size=variation_data.get('size')
+            )
+            db.session.add(variation)
         db.session.commit()
 
-        flash('Product added successfully!', 'success')
+        # Handle other categories similarly
+
         return redirect(url_for('dashboard'))
 
     return render_template('add_products.html', form=form)
-
 
 @app.route('/dashboard/edit_product/<string:product_type>/<int:product_id>', methods=['GET', 'POST'])
 def edit_product(product_type, product_id):
