@@ -6,33 +6,8 @@
     <div class="container px-4 px-lg-5 my-5">
     </div>
 </header>
-<section class="py-5">
-    <div class="container px-4 px-lg-5 mt-5">
-        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-            {% for category, product in random_products.items() %}
-            <div class="col mb-5">
-                <div class="card h-100">
-                    <!-- Product image-->
-                    <img class="card-img-top" src="{{ product.img_url }}" alt="{{ product.product_name }}" />
-                    <!-- Product details-->
-                    <div class="card-body p-4">
-                        <div class="text-center">
-                            <!-- Product name-->
-                            <h5 class="fw-bolder">{{ product.product_name }}</h5>
-                            <!-- Product price-->
-                            
-                        </div>
-                    </div>
-                    <!-- Product actions-->
-                    <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                        <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="{{ url_for('product_details', product_type=category, product_id=product.id) }}">View Details</a></div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
+
+{% include 'random_items.html' %}
 
 <!-- Swiper CSS -->
 <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
@@ -60,15 +35,14 @@
                         <img src="https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/0007/7046/brand.gif?itok=p_MQUpBr" class="img-fluid" alt="Image 5">
                     </div>
                     <div class="swiper-slide">
-                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0r54lT2SzmSbguwJOopS_rtc9tfznlNpBiw&s" class="img-fluid" alt="Image 5">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0r54lT2SzmSbguwJOopS_rtc9tfznlNpBiw&s" class="img-fluid" alt="Image 6">
                     </div>
                     <div class="swiper-slide">
-                        <img src="https://www.fishing-mart.com.pl/storage/producer_logos/stonfo-o9.png" class="img-fluid" alt="Image 5">
+                        <img src="https://www.fishing-mart.com.pl/storage/producer_logos/stonfo-o9.png" class="img-fluid" alt="Image 7">
                     </div>
                 </div>
             </div>
-            <!-- Add Pagination and Navigation -->
-            <div class="swiper-pagination"></div>
+            <!-- Remove Pagination -->
             <div class="swiper-button-next"></div>
             <div class="swiper-button-prev"></div>
         </div>
@@ -89,6 +63,7 @@
         pagination: {
             el: '.swiper-pagination',
             clickable: true,
+            type: 'bullets', // This can be removed to disable pagination dots
         },
         navigation: {
             nextEl: '.swiper-button-next',
@@ -151,21 +126,9 @@
         left: 10px; /* Position to the left */
     }
 
+    /* Pagination styles (if you decide to re-enable) */
     .swiper-pagination {
-        position: absolute;
-        bottom: 10px; /* Adjust bottom position */
-        left: 50%;
-        transform: translateX(-50%);
-    }
-
-    .swiper-pagination-bullet {
-        background: #000; /* Customize bullet color */
-        width: 8px; /* Adjust bullet width */
-        height: 8px; /* Adjust bullet height */
-    }
-
-    .swiper-pagination-bullet-active {
-        background: #ff0000; /* Customize active bullet color */
+        display: none; /* Hide pagination dots */
     }
 </style>
 

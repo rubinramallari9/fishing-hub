@@ -1,7 +1,110 @@
-{% include 'header.html' %}
-{% block content %}
-<h1>Admin Dashboard</h1>
-<a href="{{ url_for('add_product') }}">Add Product</a>
-<!-- List products here with edit links -->
-{% endblock %}
-{% include 'footer.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+        }
+
+        .sidebar {
+            height: 100vh;
+            background-color: #343a40;
+            color: white;
+            padding: 20px;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2rem; /* Make fonts bigger */
+        }
+        .sidebar a:hover {
+            background-color: #495057;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align items to the top */
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            gap: 40px; /* Add more space between the cards */
+            flex-wrap: wrap; /* Allow cards to wrap on smaller screens */
+        }
+        .card {
+            margin: 10px;
+            width: 100%;
+            max-width: 1000px; /* 4 times wider */
+            height: 300px; /* 2 times taller */
+            flex: 1;
+        }
+        .card .card-title {
+            font-size: 2rem; /* Make card titles bigger */
+        }
+        @media (max-width: 768px) {
+            .card {
+                max-width: 100%; /* Make cards full-width on small screens */
+                height: 200px; /* Adjust height on small screens */
+            }
+        }
+        @media (max-width: 576px) {
+            .card {
+                height: 150px; /* Further adjust height on extra-small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <br>
+    <br>
+    <br>
+    <a href="{{url_for('index')}}">Kreu</a>
+    <a href="#">Add Product</a>
+    <a href="#">Edit Product</a>
+    <a href="#">Remove Product</a>
+</div>
+<div class="content">
+    <h1>Admin Dashboard</h1>
+    <br>
+    <br> <!-- Add space between the Admin Dashboard label and the cards -->
+    <div class="dashboard-container">
+        <div class="cards-container">
+            <div class="card text-white bg-success">
+                <div class="card-header">Sales</div>
+                <div class="card-body">
+                    <h5 class="card-title" id="sales">0</h5>
+                </div>
+            </div>
+            <div class="card text-white bg-warning">
+                <div class="card-header">Ongoing Orders</div>
+                <div class="card-body">
+                    <h5 class="card-title" id="orders">0</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -11,6 +11,24 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
 /* Ensure container takes full width */
+/* Custom Styles */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+footer {
+    background-color: #343a40; /* Footer background color */
+    padding: 1rem;
+    text-align: center;
+    color: #fff; /* Text color */
+    border-top: 1px solid #e7e7e7; /* Optional: border for visual separation */
+}
 
 
 :root {

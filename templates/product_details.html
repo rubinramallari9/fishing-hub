@@ -3,12 +3,22 @@
 {% include 'header.html' %}
 
 {% block content %}
-
+    <style>
+        .banner {
+            background-color: #f8f9fa; /* Light background color */
+            color: #000; /* Text color */
+            text-transform: uppercase; /* Convert text to uppercase */
+            padding: 20px; /* Padding for spacing */
+            text-align: center; /* Center-align text */
+            font-weight: bold; /* Make text bold */
+            font-size: 2rem; /* Adjust font size as needed */
+        }
+    </style>
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row">
             <div class="col-lg-6">
-                <img class="img-fluid" src="{{ product.img_url }}" alt="{{ product.product_name }}" />
+                <img class="img-fluid" src="{{ product.img_url }}" alt="{{ product.product_name }}"/>
             </div>
             <div class="col-lg-6">
                 <h2 class="fw-bolder">{{ product.product_name }}</h2>
@@ -19,11 +29,12 @@
                         <select id="variationSelect" class="form-select" onchange="updateStockInfo()">
                             <option value="" disabled selected>Select your option</option>
                             {% for variation in variations %}
-                                <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
-                                    {% for field in relevant_fields %}
-                                        {{ variation[field] }} {% if not loop.last %} - {% endif %}
-                                    {% endfor %}
-                                </option>
+                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}"
+                                    data-price="{{ variation.price }}">
+                                {% for field in relevant_fields %}
+                                {{ variation[field] }} {% if not loop.last %} - {% endif %}
+                                {% endfor %}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -31,7 +42,8 @@
                     <!-- Stock Bar -->
                     <div class="mb-3" id="stockInfo" style="display: none;">
                         <div class="progress">
-                            <div id="stockBar" class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ max_stock }}"></div>
+                            <div id="stockBar" class="progress-bar" role="progressbar" aria-valuemin="0"
+                                 aria-valuemax="{{ max_stock }}"></div>
                         </div>
                         <p id="stockText"></p>
                     </div>
@@ -42,12 +54,17 @@
                     </div>
 
                     <!-- Add to Cart Button -->
-                    <button type="submit" id="addToCartBtn" class="btn btn-outline-dark mt-3" disabled>Add to Cart</button>
+                    <button type="submit" id="addToCartBtn" class="btn btn-outline-dark mt-3" disabled>Add to Cart
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </section>
+<div class="banner">
+    Produkte të ngjashme
+</div>
+{% include 'random_items.html' %}
 
 <script>
     function updateStockInfo() {

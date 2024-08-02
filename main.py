@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, EmailField, SubmitField, SelectField, FloatField, IntegerField
 from wtforms.validators import DataRequired, Email
 from flask_bootstrap import Bootstrap4
-import random
+from random import sample
 from sqlalchemy import func
 
 
@@ -21,7 +21,8 @@ class Config:
         'spinning': 'sqlite:///spinning.db',
         'bolognese': 'sqlite:///bolognese.db',
         'jigg': 'sqlite:///jigg.db',
-        'bolentino': 'sqlite:///bolentino.db'
+        'bolentino': 'sqlite:///bolentino.db',
+        'reel': 'sqlite:///reel.db'
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -225,23 +226,24 @@ class ProductVariationBolentino(db.Model):
     product = db.relationship('Bolentino', backref=db.backref('variations', lazy=True))
 
 
-class MakinetaProduct(db.Model):
-    __tablename__ = 'makineta_product'
+class Makineta(db.Model):
+    __bind_key__ = "reel"
+    __tablename__ = "reel"
     id = db.Column(db.Integer, primary_key=True)
-    product_name = db.Column(db.String(100), nullable=False)
-    img_url = db.Column(db.String(200), nullable=True)
-    description = db.Column(db.Text, nullable=True)
+    product_name = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(1000), nullable=False)
+    description = db.Column(db.String(1000))
+class ProductVariationMakineta(db.Model):
+    __bind_key__ = 'reel'
+    __tablename__ = 'product_variation'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Ensure autoincrement is enabled
+    product_id = db.Column(db.Integer, db.ForeignKey('reel.id'), nullable=False)
 
-
-class MakinetaVariation(db.Model):
-    __tablename__ = 'makineta_variation'
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('makineta_product.id'), nullable=False)
-    size = db.Column(db.String(50), nullable=False)
     price = db.Column(db.Float, nullable=False)
-    stock = db.Column(db.Integer, nullable=False)
+    stock = db.Column(db.Integer, nullable=False, default=0)
+    size = db.Column(db.String(250), nullable=False)  # New column
 
-    product = db.relationship('MakinetaProduct', backref=db.backref('variations', lazy=True))
+    product = db.relationship('Makineta', backref=db.backref('variations', lazy=True))
 
 
 product_models = {
@@ -255,7 +257,7 @@ product_models = {
     'bolognese': (Bolognese, ProductVariationBolognese),
     'jigg': (Jigg, ProductVariationJigg),
     'bolentino': (Bolentino, ProductVariationBolentino),
-    'makineta': (MakinetaProduct, MakinetaVariation)
+    'reel': (Makineta, ProductVariationMakineta)
 }
 def get_price_range(variations):
     prices = [variation.price for variation in variations]
@@ -264,18 +266,24 @@ def get_price_range(variations):
     min_price, max_price = min(prices), max(prices)
     return f"${min_price:.2f} - ${max_price:.2f}" if min_price != max_price else f"${min_price:.2f}"
 
-@app.route('/')
-def index():
-    categories = ['fillespanje','flourocarbon','shockleader','spinning', 'allround', 'surfcasting', 'bolognese', 'bolentino', 'jigg', 'makineta']
+
+def random_():
+    all_categories = list(product_models.keys())
+    chosen_categories = sample(all_categories, min(4, len(all_categories)))
+
     random_products = {}
 
-    for category in categories:
+    for category in chosen_categories:
         product_model, _ = product_models[category]
         product = db.session.query(product_model).order_by(func.random()).first()
         if product:
             random_products[category] = product
+    return random_products
 
-    return render_template('index.html', random_products=random_products)
+@app.route('/')
+def index():
+    return render_template('index.html', random_products=random_())
+
 @app.route('/fillespanje')
 def fillespanje():
     products = db.session.query(Fillespanje).all()
@@ -371,7 +379,7 @@ def product_details(product_type, product_id):
         'bolognese': (Bolognese, ProductVariationBolognese),
         'jigg': (Jigg, ProductVariationJigg),
         'bolentino': (Bolentino, ProductVariationBolentino),
-        'makineta': (MakinetaProduct, MakinetaVariation)
+        'makineta': (Makineta, ProductVariationMakineta)
     }
     if product_type not in product_models:
         return redirect(url_for('index'))  # Redirect to home if product_type is invalid
@@ -400,7 +408,7 @@ def product_details(product_type, product_id):
         relevant_fields.append('size')
 
     return render_template("product_details.html", product=product, variations=variations, product_type=product_type,
-                           max_stock=max_stock, relevant_fields=relevant_fields, variation_fields=variation_fields)
+                           max_stock=max_stock, relevant_fields=relevant_fields, variation_fields=variation_fields, random_products=random_())
 
 @app.route('/get_price')
 def get_price():
@@ -524,21 +532,21 @@ class ProductForm(FlaskForm):
 
 @app.route('/dashboard')
 def dashboard():
-    if not session.get('user_id'):
-        return redirect(url_for('login'))
-    user = User.query.get(session['user_id'])
-    if not user or not user.is_admin:
-        return redirect(url_for('index'))
+    # if not session.get('user_id'):
+    #     return redirect(url_for('login'))
+    # user = User.query.get(session['user_id'])
+    # if not user or not user.is_admin:
+    #     return redirect(url_for('index'))
     return render_template("dashboard.html")
 
 
 @app.route('/dashboard/add_product', methods=['GET', 'POST'])
 def add_product():
-    if not session.get('user_id'):
-        return redirect(url_for('login'))
-    user = User.query.get(session['user_id'])
-    if not user or not user.is_admin:
-        return redirect(url_for('index'))
+    # if not session.get('user_id'):
+    #     return redirect(url_for('login'))
+    # user = User.query.get(session['user_id'])
+    # if not user or not user.is_admin:
+    #     return redirect(url_for('index'))
 
     form = ProductForm()
     if form.validate_on_submit():
@@ -562,16 +570,16 @@ def add_product():
         flash('Product added successfully!', 'success')
         return redirect(url_for('dashboard'))
 
-    return render_template('add_product.html', form=form)
+    return render_template('add_products.html', form=form)
 
 
 @app.route('/dashboard/edit_product/<string:product_type>/<int:product_id>', methods=['GET', 'POST'])
 def edit_product(product_type, product_id):
-    if not session.get('user_id'):
-        return redirect(url_for('login'))
-    user = User.query.get(session['user_id'])
-    if not user or not user.is_admin:
-        return redirect(url_for('index'))
+    # if not session.get('user_id'):
+    #     return redirect(url_for('login'))
+    # user = User.query.get(session['user_id'])
+    # if not user or not user.is_admin:
+    #     return redirect(url_for('index'))
 
     product_model, variation_model = product_models[product_type]
     product = db.session.query(product_model).filter_by(id=product_id).first_or_404()
@@ -604,9 +612,9 @@ def edit_product(product_type, product_id):
 
 @app.route("/makineta")
 def makineta():
-    products = db.session.query(MakinetaProduct).all()
+    products = db.session.query(Makineta).all()
     for product in products:
-        variations = db.session.query(MakinetaVariation).filter_by(product_id=product.id).all()
+        variations = db.session.query(ProductVariationMakineta).filter_by(product_id=product.id).all()
         product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("makineta.html", products=products)
 
@@ -616,10 +624,10 @@ def kontakto():
     return render_template("kontakto.html")
 
 
-
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+
 
     app.run(debug=True)
 
