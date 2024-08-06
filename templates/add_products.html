@@ -1,163 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Add Product</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Makineta</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <style>
-        .variation-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .variation-actions {
-            display: flex;
-            align-items: center;
-            margin-left: 10px;
-        }
-        .variation-actions button {
-            border: none;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 5px 10px;
-            margin-left: 5px; /* Adjusted margin to space out buttons */
-        }
-        .remove-variation {
-            background-color: #dc3545; /* Red */
-        }
-        #add-variation {
-            margin-bottom: 20px; /* Space below the add variation button */
-        }
-        #submit-button {
-            margin-top: 20px; /* Space above the submit button */
-        }
-    </style>
-    <script>
-        $(document).ready(function() {
-            const categoryFields = {
-                'fillespanje': ['meters', 'diameter'],
-                'flourocarbon': ['meters', 'diameter'],
-                'shockleader': ['meters', 'diameter'],
-                'allround': ['meters', 'action'],
-                'surfcasting': ['meters', 'action'],
-                'spinning': ['meters', 'action'],
-                'bolognese': ['meters', 'action'],
-                'jigg': ['meters', 'action'],
-                'bolentino': ['meters', 'action'],
-                'makineta': ['size']
-            };
-
-            $('#category').change(function() {
-                const selectedCategory = $(this).val();
-                $('#variation-fields').empty();
-                $('#variation-counter').val(0); // Reset the counter
-
-                if (selectedCategory) {
-                    $('#add-variation').show();
-                    addVariationFields();
-                } else {
-                    $('#add-variation').hide();
-                }
-            });
-
-            $('#add-variation').click(function() {
-                addVariationFields();
-            });
-
-            function addVariationFields() {
-                const selectedCategory = $('#category').val();
-                const fields = categoryFields[selectedCategory];
-                const index = $('#variation-counter').val();
-
-                if (fields) {
-                    let fieldsHtml = `<div class="variation-container" id="variation-${index}">`;
-
-                    fields.forEach(field => {
-                        let fieldHtml;
-                        if (field === 'action') {
-                            fieldHtml = `
-                                <div class="form-group">
-                                    <label for="action_${index}">Action</label>
-                                    <input type="text" class="form-control" id="action_${index}" name="variations[${index}][action]">
-                                </div>`;
-                        } else if (field === 'size') {
-                            fieldHtml = `
-                                <div class="form-group">
-                                    <label for="size_${index}">Size</label>
-                                    <input type="text" class="form-control" id="size_${index}" name="variations[${index}][size]">
-                                </div>`;
-                        } else {
-                            fieldHtml = `
-                                <div class="form-group">
-                                    <label for="${field}_${index}">${field.charAt(0).toUpperCase() + field.slice(1)}</label>
-                                    <input type="text" class="form-control" id="${field}_${index}" name="variations[${index}][${field}]">
-                                </div>`;
-                        }
-                        fieldsHtml += fieldHtml;
-                    });
-
-                    fieldsHtml += `
-                        <div class="variation-actions">
-                            <button class="remove-variation" data-index="${index}" title="Remove Variation">-</button>
-                        </div>
-                    </div>`;
-                    $('#variation-fields').append(fieldsHtml);
-                    $('#variation-counter').val(parseInt(index) + 1);
-                }
-            }
-
-            $('#variation-fields').on('click', '.remove-variation', function() {
-                const index = $(this).data('index');
-                $(`#variation-${index}`).remove();
-            });
-
-            $('#add-variation').hide();
-        });
-    </script>
 </head>
 <body>
 <div class="container">
-    <h1 class="mt-5">Add New Product</h1>
+    <h1 class="mt-5">Add New Makineta Product</h1>
     <form method="POST" action="{{ url_for('add_product') }}">
+        <div class="form-group">
+            <label for="product_id">Product ID</label>
+            <input type="number" class="form-control" id="product_id" name="product_id" required>
+        </div>
         <div class="form-group">
             <label for="name">Name</label>
             <input type="text" class="form-control" id="name" name="name" required>
         </div>
         <div class="form-group">
-            <label for="name">Id</label>
-            <input type="text" class="form-control" id="id" name="id" required>
-        </div>
-        <div class="form-group">
-            <label for="price">Price</label>
-            <input type="number" class="form-control" id="price" name="price" step="0.01" required>
-        </div>
-        <div class="form-group">
-            <label for="stock">Stock</label>
-            <input type="number" class="form-control" id="stock" name="stock" required>
-        </div>
-        <div class="form-group">
-            <label for="stock">Image</label>
+            <label for="img_url">Image URL</label>
             <input type="text" class="form-control" id="img_url" name="img_url" required>
-        </div>
-        <div class="form-group">
-            <label for="category">Category</label>
-            <select class="form-control" id="category" name="category" required>
-                <option value="">Select Category</option>
-                <option value="fillespanje">Fillespanje</option>
-                <option value="flourocarbon">Flourocarbon</option>
-                <option value="shockleader">Shock Leader</option>
-                <option value="allround">All Round</option>
-                <option value="surfcasting">Surfcasting</option>
-                <option value="spinning">Spinning</option>
-                <option value="bolognese">Bolognese</option>
-                <option value="jigg">Jigg</option>
-                <option value="bolentino">Bolentino</option>
-                <option value="makineta">Makineta</option>
-            </select>
         </div>
         <div class="form-group">
             <label for="description">Description</label>
@@ -168,8 +31,45 @@
         <button type="button" id="add-variation" class="btn btn-success mb-3">+</button>
         <br>
         <br>
-        <button type="submit" id="submit-button" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#add-variation').click(function() {
+            addVariationFields();
+        });
+
+        function addVariationFields() {
+            const index = $('#variation-counter').val();
+            let fieldsHtml = `
+                <div class="variation-container border p-3 mb-3" id="variation-${index}">
+                    <h5>Variation ${parseInt(index) + 1}</h5>
+                    <div class="form-group">
+                        <label for="variations[${index}][size]">Size</label>
+                        <input type="text" class="form-control" id="variations_${index}_size" name="variations[][size]" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="variations[${index}][price]">Price</label>
+                        <input type="number" class="form-control" id="variations_${index}_price" name="variations[][price]" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="variations[${index}][stock]">Stock</label>
+                        <input type="number" class="form-control" id="variations_${index}_stock" name="variations[][stock]" required>
+                    </div>
+                    <button class="btn btn-danger remove-variation" data-index="${index}">Remove</button>
+                </div>`;
+            $('#variation-fields').append(fieldsHtml);
+            $('#variation-counter').val(parseInt(index) + 1);
+        }
+
+        $('#variation-fields').on('click', '.remove-variation', function() {
+            const index = $(this).data('index');
+            $(`#variation-${index}`).remove();
+        });
+    });
+</script>
 </body>
 </html>
