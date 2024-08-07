@@ -1,11 +1,14 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, IntegerField, SelectField, TextAreaField, FieldList, FormField, EmailField, SubmitField, Form, HiddenField, DecimalField
-from wtforms.validators import DataRequired, Email, Optional
+from wtforms import StringField, FloatField, PasswordField,IntegerField, SelectField, TextAreaField, FieldList, FormField, EmailField, SubmitField, Form, HiddenField, DecimalField
+from wtforms.validators import DataRequired, Email, Optional, EqualTo
 from functools import wraps
 from random import sample
 from sqlalchemy import func
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf.csrf import CSRFProtect
+
 
 # Configuration class
 class Config:
@@ -27,8 +30,12 @@ class Config:
 
 # Flask app and extensions setup
 app = Flask(__name__)
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
+csrf.init_app(app)
 app.config.from_object(Config)
 app.secret_key = 'deal23-1B'  # Needed for session management
+
 
 # Initialize CSRF protection
 
@@ -36,7 +43,8 @@ app.secret_key = 'deal23-1B'  # Needed for session management
 # Initialize SQLAlchemy
 db = SQLAlchemy(app, session_options={"autoflush": False, "expire_on_commit": False})
 
-# Define models
+
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -44,6 +52,12 @@ class User(db.Model):
     password = db.Column(db.String(250), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     points = db.Column(db.Integer, default=0)
+
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
 
 class Fillespanje(db.Model):
     __bind_key__ = 'fillespanje'
@@ -258,26 +272,6 @@ class ProductVariationMakineta(db.Model):
 
     product = db.relationship('Makineta', backref=db.backref('variations', lazy=True))
 # Decorator to require login
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login', next=request.url))
-        return f(*args, **kwargs)
-    return decorated_function
-
-# Admin-only decorator
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login', next=request.url))
-        user = User.query.filter_by(id=session['user_id']).first()
-        if not user or not user.is_admin:
-            flash("You do not have permission to access this page.", "error")
-            return redirect(url_for('index'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # Login form
 class LoginForm(FlaskForm):
@@ -435,33 +429,71 @@ def random_():
         if product:
             random_products[category] = product
     return random_products
+class LoginForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
 
+class SignupForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Sign Up')
+
+# Helper functions
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('You need to be logged in to access this page.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 # Login route
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    form = SignupForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        new_user = User(email=email, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Your account has been created! You can now log in.', 'success')
+        return redirect(url_for('login'))
+    return render_template('signup.html', form=form)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        if user and user.password == form.password.data:
+        if user and check_password_hash(user.password, form.password.data):
             session['user_id'] = user.id
             session['email'] = user.email
-            session['is_admin'] = user.is_admin
-            return redirect(url_for('admin_dashboard' if user.is_admin else 'index'))
-        flash("Invalid email or password", "error")
+            flash('You have been logged in!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('login.html', form=form)
 
-# Logout route
+
 @app.route('/logout')
-@login_required
 def logout():
-    session.clear()
+    session.pop('user_id', None)
+    session.pop('is_admin', None)
+    flash('You have been logged out.', 'success')
     return redirect(url_for('index'))
 
 # Admin dashboard route
 @app.route('/admin_dashboard')
-# @admin_required
+@login_required
 def admin_dashboard():
-    return render_template('dashboard.html')
+    if not session.get('is_admin'):
+        flash('Admin access required.', 'danger')
+        return redirect(url_for('index'))
+    return render_template('admin_dashboard.html')
 
 @app.route('/dashboard/add_product/fillespanje', methods=['GET', 'POST'])
 def add_product_fillespanje():
@@ -697,9 +729,5 @@ def makineta():
 @app.route("/kontakto")
 def kontakto():
     return render_template("kontakto.html")
-
-
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
