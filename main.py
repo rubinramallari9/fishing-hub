@@ -61,7 +61,7 @@ class Flourocarbon(db.Model):
     img_url = db.Column(db.String(1000), nullable=False)
     description = db.Column(db.String(1000))
 
-class ProductVariation(db.Model):
+class ProductVariationFillespanje(db.Model):
     __bind_key__ = 'fillespanje'
     __tablename__ = 'product_variation'
     id = db.Column(db.Integer, primary_key=True)
@@ -325,7 +325,7 @@ def index():
 def fillespanje():
     products = db.session.query(Fillespanje).all()
     for product in products:
-        variations = db.session.query(ProductVariation).filter_by(product_id=product.id).all()
+        variations = db.session.query(ProductVariationFillespanje).filter_by(product_id=product.id).all()
         product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("fillespanje.html", products=products)
 
@@ -403,7 +403,7 @@ def bolentino():
     return render_template("bolentino.html", products=products)
 
 product_models = {
-    'fillespanje': (Fillespanje, ProductVariation),
+    'fillespanje': (Fillespanje, ProductVariationFillespanje),
     'flourocarbon': (Flourocarbon, ProductVariationFlourocarbon),
     'shockleader': (Shockleader, ProductVariationShockleader),
     'allround': (Allround, ProductVariationAllround),
@@ -463,9 +463,151 @@ def logout():
 def admin_dashboard():
     return render_template('dashboard.html')
 
+@app.route('/dashboard/add_product/fillespanje', methods=['GET', 'POST'])
+def add_product_fillespanje():
+    if request.method == 'POST':
+        product_id = request.form['product_id']
+        name = request.form['name']
+        img_url = request.form['img_url']
+        description = request.form.get('description', '')
+
+        # Create and add the main product
+        new_product = Fillespanje(
+            id=product_id,
+            product_name=name,
+            img_url=img_url,
+            description=description
+        )
+        db.session.add(new_product)
+        db.session.commit()
+
+        # Handle variations
+        variation_diameters = request.form.getlist('variations[][diameter]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+        variation_meters = request.form.getlist('variations[][meters]')
+
+        num_variations = len(variation_diameters)
+        if (len(variation_prices) != num_variations or
+            len(variation_stocks) != num_variations or
+            len(variation_meters) != num_variations):
+            flash('Mismatch in variation data lengths.', 'danger')
+            return redirect(url_for('add_product_fillespanje'))
+
+        for i in range(num_variations):
+            diameter = variation_diameters[i]
+            price = variation_prices[i]
+            stock = variation_stocks[i]
+            meters = variation_meters[i]
+            variation = ProductVariationFillespanje(
+                product_id=new_product.id,
+                diameter=diameter,
+                meters=meters,
+                price=float(price),
+                stock=int(stock)
+            )
+            db.session.add(variation)
+
+        db.session.commit()
+
+        flash('Product and its variations added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_fillespanje.html')
+
+
+
+@app.route('/dashboard/add_product/flourocarbon', methods=['GET', 'POST'])
+def add_product_flourocarbon():
+    if request.method == 'POST':
+        product_id = request.form['product_id']
+        name = request.form['name']
+        img_url = request.form['img_url']
+        description = request.form.get('description', '')
+
+        # Create and add the main product
+        new_product = Flourocarbon(
+            id=product_id,
+            product_name=name,
+            img_url=img_url,
+            description=description
+        )
+        db.session.add(new_product)
+        db.session.commit()
+
+        # Handle variations
+        variation_diameters = request.form.getlist('variations[][diameter]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+
+        for i in range(len(variation_diameters)):
+            diameter = variation_diameters[i]
+            price = variation_prices[i]
+            stock = variation_stocks[i]
+
+            variation = ProductVariationFlourocarbon(
+                product_id=new_product.id,
+                diameter=diameter,
+                price=float(price),
+                stock=int(stock)
+            )
+            db.session.add(variation)
+
+        db.session.commit()
+
+        flash('Product and its variations added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_fillespanje.html')
+
+@app.route('/dashboard/add_product/shockleader', methods=['GET', 'POST'])
+def add_product_shockleader():
+    if request.method == 'POST':
+        product_id = request.form['product_id']
+        name = request.form['name']
+        img_url = request.form['img_url']
+        description = request.form.get('description', '')
+
+        # Create and add the main product
+        new_product = ShockLeader(
+            id=product_id,
+            product_name=name,
+            img_url=img_url,
+            description=description
+        )
+        db.session.add(new_product)
+        db.session.commit()
+
+        # Handle variations
+        variation_diameters = request.form.getlist('variations[][diameter]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+
+        for i in range(len(variation_diameters)):
+            diameter = variation_diameters[i]
+            price = variation_prices[i]
+            stock = variation_stocks[i]
+
+            variation = ProductVariationShockLeader(
+                product_id=new_product.id,
+                diameter=diameter,
+                price=float(price),
+                stock=int(stock)
+            )
+            db.session.add(variation)
+
+        db.session.commit()
+
+        flash('Product and its variations added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_fillespanje.html')
+
+
+
 # Add product route
-@app.route('/dashboard/add_product', methods=['GET', 'POST'])
-def add_product():
+@app.route('/dashboard/add_product/makineta', methods=['GET', 'POST'])
+def add_productMakineta():
     if request.method == 'POST':
         product_id = request.form['product_id']
         name = request.form['name']
@@ -508,16 +650,29 @@ def add_product():
     return render_template('add_products.html')
 
 
-
-
-# Product details route
 @app.route('/product/<string:product_type>/<int:product_id>')
 def product_details(product_type, product_id):
     model = globals()[product_type.capitalize()]
     product = model.query.get_or_404(product_id)
     variation_model = globals()[f'ProductVariation{product_type.capitalize()}']
     variations = variation_model.query.filter_by(product_id=product_id).all()
-    return render_template('product_details.html', product=product, variations=variations, product_type=product_type)
+
+    # Determine relevant fields based on product type
+    if product_type in ['spinning', 'allround', 'surfcasting', 'bolognese', 'jigg', 'bolentino']:
+        relevant_fields = ['meters', 'action']
+    elif product_type == 'makineta':
+        relevant_fields = ['size']
+    elif product_type == 'fillespanje':
+        relevant_fields = ['diameter', 'meters']
+    else:
+        relevant_fields = ['diameter']
+
+    # Calculate the maximum stock value
+    max_stock = max(variation.stock for variation in variations) if variations else 0
+
+    return render_template('product_details.html', product=product, variations=variations, product_type=product_type, max_stock=max_stock, relevant_fields=relevant_fields, random_products=random_())
+
+
 
 @app.route("/makineta")
 def makineta():

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add FillesPanje</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1 class="mt-5">Add Fillespanja, Shockleader, Flourocarbon</h1>
+    <form method="POST" action="{{ url_for('add_product_fillespanje') }}">
+        <div class="form-group">
+            <label for="product_id">Product ID</label>
+            <input type="number" class="form-control" id="product_id" name="product_id" required>
+        </div>
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="img_url">Image URL</label>
+            <input type="text" class="form-control" id="img_url" name="img_url" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" name="description"></textarea>
+        </div>
+        <div id="variation-fields"></div>
+        <input type="hidden" id="variation-counter" value="0">
+        <button type="button" id="add-variation" class="btn btn-success mb-3">+</button>
+        <br>
+        <br>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#add-variation').click(function() {
+            addVariationFields();
+        });
+
+        function addVariationFields() {
+            const index = $('#variation-counter').val();
+            let fieldsHtml = `
+                <div class="variation-container border p-3 mb-3" id="variation-${index}">
+                    <h5>Variation ${parseInt(index) + 1}</h5>
+                    <div class="form-group">
+                        <label for="variations[${index}][diameter]">Diameter</label>
+                        <input type="text" class="form-control" id="variations_${index}_diameter" name="variations[][diameter]" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="variations[${index}][meters]">Meters</label>
+                        <input type="text" class="form-control" id="variations_${index}_diameter" name="variations[][meters]" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="variations[${index}][price]">Price</label>
+                        <input type="number" class="form-control" id="variations_${index}_price" name="variations[][price]" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="variations[${index}][stock]">Stock</label>
+                        <input type="number" class="form-control" id="variations_${index}_stock" name="variations[][stock]" required>
+                    </div>
+                    <button class="btn btn-danger remove-variation" data-index="${index}">Remove</button>
+                </div>`;
+            $('#variation-fields').append(fieldsHtml);
+            $('#variation-counter').val(parseInt(index) + 1);
+        }
+
+        $('#variation-fields').on('click', '.remove-variation', function() {
+            const index = $(this).data('index');
+            $(`#variation-${index}`).remove();
+        });
+    });
+</script>
+</body>
+</html>

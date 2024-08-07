@@ -1,5 +1,3 @@
-<!-- templates/product_details.html -->
-
 {% include 'header.html' %}
 
 {% block content %}
@@ -29,10 +27,9 @@
                         <select id="variationSelect" class="form-select" onchange="updateStockInfo()">
                             <option value="" disabled selected>Select your option</option>
                             {% for variation in variations %}
-                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}"
-                                    data-price="{{ variation.price }}">
+                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
                                 {% for field in relevant_fields %}
-                                {{ variation[field] }} {% if not loop.last %} - {% endif %}
+                                {{ variation[field] }}{% if not loop.last %} - {% endif %}
                                 {% endfor %}
                             </option>
                             {% endfor %}
@@ -42,8 +39,7 @@
                     <!-- Stock Bar -->
                     <div class="mb-3" id="stockInfo" style="display: none;">
                         <div class="progress">
-                            <div id="stockBar" class="progress-bar" role="progressbar" aria-valuemin="0"
-                                 aria-valuemax="{{ max_stock }}"></div>
+                            <div id="stockBar" class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ max_stock }}"></div>
                         </div>
                         <p id="stockText"></p>
                     </div>
@@ -54,8 +50,7 @@
                     </div>
 
                     <!-- Add to Cart Button -->
-                    <button type="submit" id="addToCartBtn" class="btn btn-outline-dark mt-3" disabled>Add to Cart
-                    </button>
+                    <button type="submit" id="addToCartBtn" class="btn btn-outline-dark mt-3" disabled>Add to Cart</button>
                 </form>
             </div>
         </div>
@@ -73,6 +68,10 @@
         var stock = selectedOption.getAttribute('data-stock');
         var price = selectedOption.getAttribute('data-price');
 
+        console.log('Selected Option:', selectedOption); // Debugging
+        console.log('Stock:', stock); // Debugging
+        console.log('Price:', price); // Debugging
+
         var stockBar = document.getElementById('stockBar');
         var stockText = document.getElementById('stockText');
         var stockInfo = document.getElementById('stockInfo');
@@ -81,8 +80,8 @@
         var addToCartBtn = document.getElementById('addToCartBtn');
 
         if (stock && price) {
-            var maxStock = parseInt(stockBar.getAttribute('aria-valuemax'));
-            var stockPercentage = (stock / maxStock) * 100;
+            var maxStock = parseInt(stockBar.getAttribute('aria-valuemax'), 10);
+            var stockPercentage = (parseInt(stock, 10) / maxStock) * 100;
 
             stockBar.style.width = stockPercentage + '%';
             stockBar.setAttribute('aria-valuenow', stock);
@@ -93,13 +92,14 @@
             stockInfo.style.display = 'block';
             priceInfo.style.display = 'block';
 
-            if (stock > 0) {
-                addToCartBtn.disabled = false;
-            } else {
-                addToCartBtn.disabled = true;
-            }
+            addToCartBtn.disabled = (stock <= 0);
         }
     }
+
+    // Trigger updateStockInfo on page load if a variation is pre-selected
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStockInfo();
+    });
 </script>
 
 {% endblock %}
