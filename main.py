@@ -539,15 +539,19 @@ def add_product_flourocarbon():
         variation_diameters = request.form.getlist('variations[][diameter]')
         variation_prices = request.form.getlist('variations[][price]')
         variation_stocks = request.form.getlist('variations[][stock]')
+        variation_meters = request.form.getlist('variations[][meters]')
+
 
         for i in range(len(variation_diameters)):
             diameter = variation_diameters[i]
+            meters = variation_meters[i]
             price = variation_prices[i]
             stock = variation_stocks[i]
 
             variation = ProductVariationFlourocarbon(
                 product_id=new_product.id,
                 diameter=diameter,
+                meters=meters,
                 price=float(price),
                 stock=int(stock)
             )
@@ -558,7 +562,7 @@ def add_product_flourocarbon():
         flash('Product and its variations added successfully!', 'success')
         return redirect(url_for('admin_dashboard'))
 
-    return render_template('add_fillespanje.html')
+    return render_template('add_flourocarbon.html')
 
 @app.route('/dashboard/add_product/shockleader', methods=['GET', 'POST'])
 def add_product_shockleader():
@@ -568,8 +572,19 @@ def add_product_shockleader():
         img_url = request.form['img_url']
         description = request.form.get('description', '')
 
-        # Create and add the main product
-        new_product = ShockLeader(
+        print(f"Product ID: {product_id}, Name: {name}, Image URL: {img_url}, Description: {description}")
+
+        variation_diameters = request.form.getlist('variations[][diameter]')
+        variation_meters = request.form.getlist('variations[][meters]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+
+        print(f"Variation Diameters: {variation_diameters}")
+        print(f"Variation Meters: {variation_meters}")
+        print(f"Variation Prices: {variation_prices}")
+        print(f"Variation Stocks: {variation_stocks}")
+
+        new_product = Shockleader(
             id=product_id,
             product_name=name,
             img_url=img_url,
@@ -578,19 +593,15 @@ def add_product_shockleader():
         db.session.add(new_product)
         db.session.commit()
 
-        # Handle variations
-        variation_diameters = request.form.getlist('variations[][diameter]')
-        variation_prices = request.form.getlist('variations[][price]')
-        variation_stocks = request.form.getlist('variations[][stock]')
-
         for i in range(len(variation_diameters)):
             diameter = variation_diameters[i]
+            meters = variation_meters[i]
             price = variation_prices[i]
             stock = variation_stocks[i]
-
-            variation = ProductVariationShockLeader(
+            variation = ProductVariationShockleader(
                 product_id=new_product.id,
                 diameter=diameter,
+                meters=meters,
                 price=float(price),
                 stock=int(stock)
             )
@@ -601,7 +612,7 @@ def add_product_shockleader():
         flash('Product and its variations added successfully!', 'success')
         return redirect(url_for('admin_dashboard'))
 
-    return render_template('add_fillespanje.html')
+    return render_template('add_shockleader.html')
 
 
 
