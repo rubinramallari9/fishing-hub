@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash
+from flask import Flask, render_template, redirect, url_for, request, session, flash, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, PasswordField,IntegerField, SelectField, TextAreaField, FieldList, FormField, EmailField, SubmitField, Form, HiddenField, DecimalField
@@ -8,7 +8,8 @@ from random import sample
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
-
+from flask_login import LoginManager, current_user, UserMixin, login_required, login_user, logout_user
+import random
 
 # Configuration class
 class Config:
@@ -35,21 +36,21 @@ csrf = CSRFProtect(app)
 csrf.init_app(app)
 app.config.from_object(Config)
 app.secret_key = 'deal23-1B'  # Needed for session management
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 
-# Initialize CSRF protection
 
 
 # Initialize SQLAlchemy
 db = SQLAlchemy(app, session_options={"autoflush": False, "expire_on_commit": False})
 
 
-
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(250), unique=True, nullable=False)
-    password = db.Column(db.String(250), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     points = db.Column(db.Integer, default=0)
 
@@ -302,18 +303,28 @@ class ProductForm(FlaskForm):
 # Index route
 @app.route('/')
 def index():
-    categories = [
-        'fillespanje', 'flourocarbon', 'shockleader', 'allround',
-        'surfcasting', 'beach', 'spinning', 'bolognese', 'jigg',
-        'bolentino', 'makineta'
-    ]
-    products = {}
-    for category in categories:
-        model = globals()[category.capitalize()]
-        random_product = model.query.order_by(func.random()).first()
-        if random_product:
-            products[category] = random_product
-    return render_template('index.html', products=products, random_products=random_())
+    categories = ['fillespanje', 'flourocarbon', 'shockleader', 'allround', 'surfcasting', 'spinning', 'bolognese',
+                  'jigg', 'bolentino', 'makineta']
+    category_data = {}
+    categories = {
+        'Filispanje': Fillespanje.query.all(),
+        'Flourocarbon': Flourocarbon.query.all(),
+        # 'Shockleader': Shockleader.query.all(),
+        # 'All round': Allround.query.all(),
+        # 'Surfcasting': Surfcasting.query.all(),
+        # 'Spinning': Spinning.query.all(),
+        # 'Bolognese': Bolognese.query.all(),
+        # 'Jigg': Jigg.query.all(),
+        # 'Bolentino': Bolentino.query.all(),
+        'Makineta': Makineta.query.all()
+    }
+
+    # Select 4 random items for each category
+    random_items = {}
+    for category, items in categories.items():
+        random_items[category] = random.sample(items, min(3 , len(items)))
+
+    return render_template('index.html', categories=random_items)
 
 @app.route('/fillespanje')
 def fillespanje():
@@ -439,8 +450,19 @@ class SignupForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
+@app.context_processor
+def inject_user():
+    return dict(current_user=current_user)
 
-# Helper functions
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+@app.context_processor
+def inject_user():
+    return dict(current_user=current_user)
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -450,50 +472,99 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 # Login route
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()  # Assuming you have a LoginForm defined
+
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
+
+        user = User.query.filter_by(email=email).first()
+
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            flash('Login successful', 'success')
+            return redirect(url_for('index'))  # Redirect to a protected route or home
+        else:
+            flash('Invalid email or password', 'danger')
+
+    return render_template('login.html', form=form)
+
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = SignupForm()
     if form.validate_on_submit():
         email = form.email.data
         password = form.password.data
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        new_user = User(email=email, password=hashed_password)
+        confirm_password = form.confirm_password.data
+
+        # Check if the passwords match
+        if password != confirm_password:
+            flash('Passwords must match.', 'danger')
+            return redirect(url_for('signup'))
+
+        # Check password length
+        if len(password) < 8:
+            flash('Password must be at least 8 characters long.', 'danger')
+            return redirect(url_for('signup'))
+
+        # Check if email already exists
+        if User.query.filter_by(email=email).first():
+            flash('Email address already exists.', 'danger')
+            return redirect(url_for('signup'))
+
+        # Hash the password
+        hashed_password = generate_password_hash(password, method='scrypt')
+
+        # Create the new user
+        new_user = User(email=email, password=hashed_password, is_admin=False)
         db.session.add(new_user)
         db.session.commit()
-        flash('Your account has been created! You can now log in.', 'success')
-        return redirect(url_for('login'))
+
+        # Log the user in
+        login_user(new_user)
+
+        flash('Account created successfully!', 'success')
+        return redirect(url_for('index'))  # Redirect to a protected route or dashboard
+
     return render_template('signup.html', form=form)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user and check_password_hash(user.password, form.password.data):
-            session['user_id'] = user.id
-            session['email'] = user.email
-            flash('You have been logged in!', 'success')
+
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash('Admin access required', 'danger')
             return redirect(url_for('index'))
-        else:
-            flash('Login Unsuccessful. Please check email and password', 'danger')
-    return render_template('login.html', form=form)
+        return f(*args, **kwargs)
+    return decorated_function
 
-
-@app.route('/logout')
-def logout():
-    session.pop('user_id', None)
-    session.pop('is_admin', None)
-    flash('You have been logged out.', 'success')
-    return redirect(url_for('index'))
 
 # Admin dashboard route
-@app.route('/admin_dashboard')
+@app.route('/admin')
 @login_required
+@admin_required
 def admin_dashboard():
-    if not session.get('is_admin'):
-        flash('Admin access required.', 'danger')
-        return redirect(url_for('index'))
-    return render_template('admin_dashboard.html')
+    # Admin dashboard content
+    return render_template('dashboard.html')
 
 @app.route('/dashboard/add_product/fillespanje', methods=['GET', 'POST'])
 def add_product_fillespanje():
@@ -729,5 +800,13 @@ def makineta():
 @app.route("/kontakto")
 def kontakto():
     return render_template("kontakto.html")
+
+
 if __name__ == '__main__':
     app.run(debug=True)
+
+admin = User.query.filter_by(email='admin@example.com').first()
+if admin:
+    print(f"Admin user found: {admin.email}, Admin status: {admin.is_admin}")
+else:
+    print("Admin user not found.")

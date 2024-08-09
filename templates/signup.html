@@ -1,36 +1,98 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sign Up</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
+{% include 'header.html' %}
+
+<style>
+    /* Container for centering the sign-up form */
+    .signup-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh; /* Adjusted to not interfere with header and footer */
+        background-color: #f8f9fa;
+        padding-top: 50px; /* Added padding to move the form higher */
+    }
+    .signup-form {
+        background-color: #ffffff;
+        padding: 30px; /* Increased padding for a larger form */
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 450px; /* Increased width for a bigger form */
+    }
+    .signup-form-group {
+        margin-bottom: 15px;
+    }
+    .signup-error {
+        color: red;
+        font-size: 0.9em;
+    }
+    .signup-label {
+        font-weight: bold;
+    }
+    .signup-input {
+        width: 100%;
+        padding: 10px; /* Increased padding for larger input fields */
+        margin-top: 5px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+    .signup-button {
+        width: 100%;
+        padding: 12px; /* Increased padding for a larger button */
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1em;
+    }
+    .signup-button:hover {
+        background-color: #0056b3;
+    }
+    .login-link {
+        display: block;
+        margin-top: 15px;
+        text-align: center;
+        color: #007bff;
+        text-decoration: none;
+    }
+    .login-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
 <body>
-    <form method="POST" action="{{ url_for('signup') }}">
-        {{ form.hidden_tag() }}
-        <div>
-            {{ form.email.label }}<br>
-            {{ form.email }}<br>
-            {% for error in form.email.errors %}
-                <span>{{ error }}</span>
-            {% endfor %}
-        </div>
-        <div>
-            {{ form.password.label }}<br>
-            {{ form.password }}<br>
-            {% for error in form.password.errors %}
-                <span>{{ error }}</span>
-            {% endfor %}
-        </div>
-        <div>
-            {{ form.confirm_password.label }}<br>
-            {{ form.confirm_password }}<br>
-            {% for error in form.confirm_password.errors %}
-                <span>{{ error }}</span>
-            {% endfor %}
-        </div>
-        <div>
-            {{ form.submit }}
-        </div>
-    </form>
+    <div class="signup-container">
+        <form method="POST" action="{{ url_for('signup') }}" class="signup-form">
+            {{ form.hidden_tag() }}
+            <div class="signup-form-group">
+                {{ form.email.label(class="signup-label") }}<br>
+                {{ form.email(class="signup-input") }}<br>
+                {% for error in form.email.errors %}
+                <span class="signup-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="signup-form-group">
+                {{ form.password.label(class="signup-label") }}<br>
+                {{ form.password(class="signup-input", minlength=8) }}<br>
+                {% for error in form.password.errors %}
+                <span class="signup-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="signup-form-group">
+                {{ form.confirm_password.label(class="signup-label") }}<br>
+                {{ form.confirm_password(class="signup-input", minlength=8) }}<br>
+                {% for error in form.confirm_password.errors %}
+                <span class="signup-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="signup-form-group">
+                {{ form.submit(class="btn signup-button") }}
+            </div>
+            <a href="{{ url_for('login') }}" class="login-link">Ke llogari? Log in</a>
+        </form>
+    </div>
+
+{% include 'footer.html' %}
 </body>
 </html>

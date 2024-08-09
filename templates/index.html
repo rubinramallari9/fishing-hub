@@ -6,10 +6,38 @@
     <div class="container px-4 px-lg-5 my-5">
     </div>
 </header>
+<br>
+{% for category, items in categories.items() %}
+    <div class="category-banner mb-5">
+        <div class="banner-text">
+            <h2>{{ category }}</h2>
+        </div>
+        <div class="row banner-items justify-content-center"> <!-- Flexbox alignment for horizontal placement -->
+            {% for product in items %}
+                <div class="col-md-2 mb-2 d-flex justify-content-center"> <!-- Adjusted column size and centering -->
+                    <div class="card h-100 small-card"> <!-- Added small-card class -->
+                        <!-- Product image -->
+                        <img class="card-img-top" src="{{ product.img_url }}" alt="Product Image"/>
+                        <!-- Product details -->
+                        <div class="card-body p-2"> <!-- Adjusted padding -->
+                            <div class="text-center">
+                                <!-- Product name -->
+                                <h5 class="fw-bolder">{{ product.product_name }}</h5>
+                            </div>
+                        </div>
+                        <!-- Product actions -->
+                        <div class="card-footer p-1 pt-0 border-top-0 bg-transparent"> <!-- Adjusted padding -->
+                            <div class="text-center">
+                                <a class="btn btn-outline-dark mt-auto" href="{{ url_for('product_details', product_type=category, product_id=product.id) }}">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endfor %}
 
-{% include 'random_items.html' %}
-
-<!-- Swiper CSS -->
 <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
 
 <section class="py-5">
@@ -18,33 +46,12 @@
         <div class="swiper-wrapper-container">
             <div class="swiper-container">
                 <div class="swiper-wrapper">
-                    <div class="swiper-slide">
-                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQd_oVABUg7RYioSDANQGVPoKjo7H_qAjSTpA&s" class="img-fluid" alt="Image 1">
-                    </div>
-                    <div class="swiper-slide">
-                        <img src="https://seeklogo.com/images/T/tubertini-logo-634C890F9C-seeklogo.com.png" class="img-fluid" alt="Image 2">
-                    </div>
-                    <div class="swiper-slide">
-                        <img src="https://www.marg8up.com/trabucco.it/doc/Logo_Trabucco_2.jpg" class="img-fluid" alt="Image 3">
-                    </div>
-                    <div class="swiper-slide">
-                        <img src="https://www.rapturelures.com/eng/upload/doc/rapture.jpg" class="img-fluid" alt="Image 4">
-                    </div>
-
-                    <div class="swiper-slide">
-                        <img src="https://d1yjjnpx0p53s8.cloudfront.net/styles/logo-thumbnail/s3/0007/7046/brand.gif?itok=p_MQUpBr" class="img-fluid" alt="Image 5">
-                    </div>
-                    <div class="swiper-slide">
-                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0r54lT2SzmSbguwJOopS_rtc9tfznlNpBiw&s" class="img-fluid" alt="Image 6">
-                    </div>
-                    <div class="swiper-slide">
-                        <img src="https://www.fishing-mart.com.pl/storage/producer_logos/stonfo-o9.png" class="img-fluid" alt="Image 7">
-                    </div>
+                    <!-- Add your Swiper slides here -->
                 </div>
+                <!-- Remove Pagination -->
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
             </div>
-            <!-- Remove Pagination -->
-            <div class="swiper-button-next"></div>
-            <div class="swiper-button-prev"></div>
         </div>
     </div>
 </section>
@@ -60,16 +67,10 @@
             delay: 4000,
             disableOnInteraction: false,
         },
-        pagination: {
-            el: '.swiper-pagination',
-            clickable: true,
-            type: 'bullets', // This can be removed to disable pagination dots
-        },
         navigation: {
             nextEl: '.swiper-button-next',
             prevEl: '.swiper-button-prev',
         },
-        initialSlide: 2, // Set the third slide (index 2) as the starting point
         breakpoints: {
             640: {
                 slidesPerView: 1,
@@ -85,6 +86,39 @@
 </script>
 
 <style>
+    .category-banner {
+        margin-bottom: 30px; /* Space below the banner */
+    }
+
+    .banner-text {
+        background-color: #b8c0ff;
+        color: #fff;
+        padding: 10px;
+        text-align: center;
+        border-radius: 5px;
+        margin-bottom: 20px; /* Space between banner and products */
+    }
+
+    .banner-items {
+        display: flex;
+        flex-wrap: nowrap; /* Ensure items stay in a single line */
+        justify-content: center; /* Center the items horizontally */
+        gap: 10px; /* Adjust gap between cards */
+    }
+
+    .small-card {
+        width: 100%;
+        max-width: 200px; /* Adjust card width */
+        height: auto; /* Allow card height to adjust based on content */
+        margin: 0; /* Removed margin between cards */
+    }
+
+    .card-img-top {
+        width: 100%;
+        height: 150px; /* Adjust height to make images smaller */
+        object-fit: cover; /* Maintain aspect ratio */
+    }
+
     .swiper-wrapper-container {
         position: relative;
     }
@@ -93,13 +127,6 @@
         width: 80%; /* Adjust width */
         height: 200px; /* Adjust height */
         margin: 0 auto; /* Center horizontally */
-    }
-
-    .swiper-slide {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
     }
 
     .swiper-slide img {
@@ -124,11 +151,6 @@
 
     .swiper-button-prev {
         left: 10px; /* Position to the left */
-    }
-
-    /* Pagination styles (if you decide to re-enable) */
-    .swiper-pagination {
-        display: none; /* Hide pagination dots */
     }
 </style>
 
