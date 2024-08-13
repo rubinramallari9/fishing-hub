@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash, current_app
+from flask import Flask, render_template, redirect, url_for, request, session, flash, current_app, get_flashed_messages
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, PasswordField,IntegerField, SelectField, TextAreaField, FieldList, FormField, EmailField, SubmitField, Form, HiddenField, DecimalField
@@ -307,7 +307,7 @@ def index():
                   'jigg', 'bolentino', 'makineta']
     category_data = {}
     categories = {
-        'Filispanje': Fillespanje.query.all(),
+        'Fillespanje': Fillespanje.query.all(),
         'Flourocarbon': Flourocarbon.query.all(),
         # 'Shockleader': Shockleader.query.all(),
         # 'All round': Allround.query.all(),
@@ -406,6 +406,19 @@ def bolentino():
         variations = db.session.query(ProductVariationBolentino).filter_by(product_id=product.id).all()
         product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("bolentino.html", products=products)
+@app.route("/makineta")
+def makineta():
+    products = db.session.query(Makineta).all()
+    for product in products:
+        variations = db.session.query(ProductVariationMakineta).filter_by(product_id=product.id).all()
+        product.has_stock = any(v.stock > 0 for v in variations)
+    return render_template("makineta.html", products=products)
+
+
+@app.route("/kontakto")
+def kontakto():
+    return render_template("kontakto.html")
+
 
 product_models = {
     'fillespanje': (Fillespanje, ProductVariationFillespanje),
@@ -430,7 +443,7 @@ def get_price_range(variations):
 
 def random_():
     all_categories = list(product_models.keys())
-    chosen_categories = sample(all_categories, min(4, len(all_categories)))
+    chosen_categories = sample(all_categories, min(5, len(all_categories)))
 
     random_products = {}
 
@@ -766,47 +779,216 @@ def add_productMakineta():
 
 @app.route('/product/<string:product_type>/<int:product_id>')
 def product_details(product_type, product_id):
+    # Dynamically get the model based on product_type
     model = globals()[product_type.capitalize()]
     product = model.query.get_or_404(product_id)
+
+    # Dynamically get the variation model
     variation_model = globals()[f'ProductVariation{product_type.capitalize()}']
     variations = variation_model.query.filter_by(product_id=product_id).all()
 
     # Determine relevant fields based on product type
     if product_type in ['spinning', 'allround', 'surfcasting', 'bolognese', 'jigg', 'bolentino']:
         relevant_fields = ['meters', 'action']
-    elif product_type == 'makineta':
+    elif product_type.lower() == 'makineta' or product_type.lower() == "reel":
         relevant_fields = ['size']
-    elif product_type == 'fillespanje':
+    elif product_type.lower() in ['fillespanje', 'filispanje']:
         relevant_fields = ['diameter', 'meters']
     else:
         relevant_fields = ['diameter']
 
-    # Calculate the maximum stock value
+    # Calculate the maximum stock value for progress bar
     max_stock = max(variation.stock for variation in variations) if variations else 0
 
-    return render_template('product_details.html', product=product, variations=variations, product_type=product_type, max_stock=max_stock, relevant_fields=relevant_fields, random_products=random_())
+    # Render the template with the necessary context
+    return render_template('product_details.html',
+                           product=product,
+                           variations=variations,
+                           product_type=product_type,
+                           max_stock=max_stock,
+                           relevant_fields=relevant_fields,
+                           random_products=random_(),
+                           category=product_type)
 
 
 
-@app.route("/makineta")
-def makineta():
-    products = db.session.query(Makineta).all()
-    for product in products:
-        variations = db.session.query(ProductVariationMakineta).filter_by(product_id=product.id).all()
-        product.has_stock = any(v.stock > 0 for v in variations)
-    return render_template("makineta.html", products=products)
 
 
-@app.route("/kontakto")
-def kontakto():
-    return render_template("kontakto.html")
+@app.route('/add_to_cart/<string:category>/<int:product_id>', methods=['POST'])
+def add_to_cart(category, product_id):
+    variation_id = request.form.get('variation_id')  # This should not be None
+    if variation_id is None:
+        flash('Error: No variation selected')
+        return redirect(url_for('product_details', category=category, product_id=product_id))
+
+    quantity = request.form.get('quantity', 1)
+
+    # Retrieve or initialize the cart
+    cart = session.get('cart', [])
+
+    # Get the product and variation from the database
+    product_model = globals()[category.capitalize()]
+    variation_model = globals()[f'ProductVariation{category.capitalize()}']
+    product = db.session.get(product_model, product_id)
+    variation = db.session.get(variation_model, int(variation_id))
+
+    # Add the product to the cart with the variation
+    cart.append({
+        'category': category,
+        'product_id': product_id,
+        'variation_id': int(variation_id),  # Ensure this is converted to int
+        'quantity': int(quantity),
+        'price': variation.price,
+        'product_name': product.product_name,
+        'img_url': product.img_url,
+        'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)])
+    })
+
+    # Save the cart back to the session
+    session['cart'] = cart
+    session.modified = True
+
+    flash('Product added to cart!')
+    return redirect(url_for('cart'))
+
+
+
+def get_relevant_fields(category):
+    category = category.lower()
+    if category in ['spinning', 'allround', 'surfcasting', 'bolognese', 'jigg', 'bolentino']:
+        return ['meters', 'action']
+    elif category == 'makineta':
+        return ['size']
+    elif category in ['fillespanje', 'filispanje']:
+        return ['diameter', 'meters']
+    else:
+        return ['diameter']
+
+@app.route('/cart')
+def cart():
+    cart_items = session.get('cart', [])
+    cart_details = []
+    total_price = 0
+
+    for item in cart_items:
+        category = item['category']
+        product_id = item['product_id']
+        quantity = item['quantity']
+
+        # Dynamically get the product and variation models
+        model = globals().get(category.capitalize())
+        variation_model = globals().get(f'ProductVariation{category.capitalize()}')
+
+        # Fetch the product and variation using Session.get()
+        product = db.session.get(model, product_id) if model else None
+        variation = db.session.get(variation_model, item['variation_id']) if variation_model else None
+
+        # Skip if product or variation is not found
+        if not product or not variation:
+            continue
+
+        # Calculate item total price
+        item_total_price = quantity * variation.price
+
+        # Add to total cart price
+        total_price += item_total_price
+
+        # Build cart details with error handling
+        try:
+            cart_details.append({
+                'category': category,
+                'product_id': product_id,  # Ensure this key is present
+                'variation_id': item['variation_id'],  # Ensure this key is present
+                'img_url': product.img_url,
+                'product_name': product.product_name,
+                'quantity': quantity,
+                'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)]),
+                'price': variation.price,
+                'item_total_price': item_total_price
+            })
+        except AttributeError as e:
+            flash(f"Error processing item in cart: {e}")
+            continue
+
+
+    return render_template('cart.html', cart_details=cart_details, total_price=total_price)
+
+
+@app.route('/remove_from_cart', methods=['POST'])
+def remove_from_cart():
+    category = request.form.get('category')
+    product_id = request.form.get('product_id')
+
+    print(f"Removing item from cart - Category: {category}, Product ID: {product_id}")
+
+    if not category or not product_id:
+        flash('Invalid request')
+        return redirect(url_for('cart'))
+
+    # Get the cart from the session
+    cart = session.get('cart', [])
+
+    # Filter out the item to be removed
+    cart = [item for item in cart if not (item['category'] == category and item['product_id'] == int(product_id))]
+
+    # Update the session
+    session['cart'] = cart
+    session.modified = True
+
+    flash('Product removed from cart!')
+    return redirect(url_for('cart'))
+
+class CheckoutForm(FlaskForm):
+    full_name = StringField('Full Name', validators=[DataRequired()])
+    phone_number = StringField('Phone Number', validators=[DataRequired()])
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    address = StringField('Address', validators=[DataRequired()])
+    submit = SubmitField('Order')
+
+@app.route('/checkout', methods=['GET', 'POST'])
+@login_required
+def checkout():
+    form = CheckoutForm()
+    flash_messages = get_flashed_messages()
+    # Retrieve user details if logged in
+    if current_user.is_authenticated:
+        if not form.email.data:
+            form.full_name.data = current_user.full_name
+            form.email.data = current_user.email
+
+    # Calculate total price
+    cart_items = session.get('cart', [])
+    total_price = 0
+    for item in cart_items:
+        category = item['category']
+        product_id = item['product_id']
+        variation_id = item['variation_id']
+        quantity = item['quantity']
+
+        # Dynamically get the product and variation models
+        model = globals().get(category.capitalize())
+        variation_model = globals().get(f'ProductVariation{category.capitalize()}')
+
+        # Fetch the product and variation
+        product = model.query.get(product_id) if model else None
+        variation = variation_model.query.get(variation_id) if variation_model else None
+
+        if product and variation:
+            total_price += variation.price * quantity
+
+    if form.validate_on_submit():
+        # Process the order
+        # (Here you would typically save order details to the database)
+
+        flash('Order placed successfully!', 'success')
+        session.pop('cart', None)  # Clear the cart
+        return redirect(url_for('index'))
+
+    # Display any flash messages
+    flash_messages = get_flashed_messages(with_categories=True)
+
+    return render_template('checkout.html', form=form, total_price=total_price, flash_messages=flash_messages)
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-admin = User.query.filter_by(email='admin@example.com').first()
-if admin:
-    print(f"Admin user found: {admin.email}, Admin status: {admin.is_admin}")
-else:
-    print("Admin user not found.")

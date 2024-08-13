@@ -72,27 +72,29 @@
                 <li class="nav-item"><a class="nav-link" href="{{url_for('kontakto')}}">Kontakto</a></li>
             </ul>
             <form class="d-flex">
-                <button class="btn btn-outline-dark me-2" type="submit">
-                    <i class="bi-cart-fill me-1"></i>
-                    Cart
-                </button>
+
+                    <button  class="btn btn-outline-dark me-2" type="submit" >
+                        <i class="bi-cart-fill me-1"></i>
+                        <a href="{{url_for('cart')}}">Cart</a>
+                    </button>
+
             </form>
             {% if current_user.is_authenticated %}
-                <form class="d-flex">
-                    <button class="btn btn-outline-dark" type="submit">
-                        <i class="bi bi-person"></i>
-                    </button>
-                    <button  class="btn btn-outline-dark" type="submit">
-                        <a href="{{url_for('logout')}}">Log Out</a>
-                    </button>
-                </form>
+            <form class="d-flex">
+                <button class="btn btn-outline-dark" type="submit">
+                    <i class="bi bi-person"></i>
+                </button>
+                <button class="btn btn-outline-dark" type="submit">
+                    <a href="{{url_for('logout')}}">Log Out</a>
+                </button>
+            </form>
             {% else %}
-                <form class="d-flex">
-                    <button class="btn btn-outline-dark" type="submit">
-                        <i class="bi bi-box-arrow-in-right"></i>
-                        <a href="{{url_for('signup')}}">Hy/Regjistrohu</a>
-                    </button>
-                </form>
+            <form class="d-flex">
+                <button class="btn btn-outline-dark" type="submit">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <a href="{{url_for('signup')}}">Hy/Regjistrohu</a>
+                </button>
+            </form>
             {% endif %}
         </div>
     </div>

@@ -1,17 +1,17 @@
 {% include 'header.html' %}
 
 {% block content %}
-    <style>
-        .banner {
-            background-color: #f8f9fa; /* Light background color */
-            color: #000; /* Text color */
-            text-transform: uppercase; /* Convert text to uppercase */
-            padding: 20px; /* Padding for spacing */
-            text-align: center; /* Center-align text */
-            font-weight: bold; /* Make text bold */
-            font-size: 2rem; /* Adjust font size as needed */
-        }
-    </style>
+<style>
+    .banner {
+        background-color: #f8f9fa;
+        color: #000;
+        text-transform: uppercase;
+        padding: 20px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 2rem;
+    }
+</style>
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row">
@@ -20,14 +20,19 @@
             </div>
             <div class="col-lg-6">
                 <h2 class="fw-bolder">{{ product.product_name }}</h2>
-                <form id="productForm">
+                <form id="productForm" method="POST"
+                      action="{{ url_for('add_to_cart', category=product_type, product_id=product.id) }}">
+                    <!-- CSRF Token Field -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
                     <!-- Product variations -->
                     <div class="mb-3">
                         <label for="variationSelect" class="form-label">Select Variation</label>
                         <select id="variationSelect" class="form-select" onchange="updateStockInfo()">
                             <option value="" disabled selected>Select your option</option>
                             {% for variation in variations %}
-                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
+                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}"
+                                    data-price="{{ variation.price }}">
                                 {% for field in relevant_fields %}
                                 {{ variation[field] }}{% if not loop.last %} - {% endif %}
                                 {% endfor %}
@@ -36,10 +41,18 @@
                         </select>
                     </div>
 
+                    <!-- Quantity Input -->
+                    <div class="mb-3">
+                        <label for="quantityInput" class="form-label">Quantity</label>
+                        <input type="number" id="quantityInput" name="quantity" class="form-control" value="1" min="1"
+                               oninput="updateStockInfo()">
+                    </div>
+
                     <!-- Stock Bar -->
                     <div class="mb-3" id="stockInfo" style="display: none;">
                         <div class="progress">
-                            <div id="stockBar" class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ max_stock }}"></div>
+                            <div id="stockBar" class="progress-bar" role="progressbar" aria-valuemin="0"
+                                 aria-valuemax="{{ max_stock }}"></div>
                         </div>
                         <p id="stockText"></p>
                     </div>
@@ -50,7 +63,8 @@
                     </div>
 
                     <!-- Add to Cart Button -->
-                    <button type="submit" id="addToCartBtn" class="btn btn-outline-dark mt-3" disabled>Add to Cart</button>
+                    <input type="hidden" name="variation_id" value="{{ product.id }}">
+                    <button type="submit" id="addToCartBtn" class="btn btn-primary">Add to Cart</button>
                 </form>
             </div>
         </div>
@@ -67,10 +81,8 @@
         var selectedOption = select.options[select.selectedIndex];
         var stock = selectedOption.getAttribute('data-stock');
         var price = selectedOption.getAttribute('data-price');
-
-        console.log('Selected Option:', selectedOption); // Debugging
-        console.log('Stock:', stock); // Debugging
-        console.log('Price:', price); // Debugging
+        var quantityInput = document.getElementById('quantityInput');
+        var quantity = parseInt(quantityInput.value, 10);
 
         var stockBar = document.getElementById('stockBar');
         var stockText = document.getElementById('stockText');
@@ -87,16 +99,20 @@
             stockBar.setAttribute('aria-valuenow', stock);
             stockText.textContent = stock + ' in stock';
 
-            priceText.textContent = price;
+            var totalPrice = price * quantity;
+            priceText.textContent = totalPrice.toLocaleString();
 
             stockInfo.style.display = 'block';
             priceInfo.style.display = 'block';
 
-            addToCartBtn.disabled = (stock <= 0);
+            // Disable "Add to Cart" button if quantity exceeds stock
+            addToCartBtn.disabled = (quantity > stock || quantity <= 0);
+        } else {
+            // If no stock or price available, disable the button
+            addToCartBtn.disabled = true;
         }
     }
 
-    // Trigger updateStockInfo on page load if a variation is pre-selected
     document.addEventListener('DOMContentLoaded', function() {
         updateStockInfo();
     });

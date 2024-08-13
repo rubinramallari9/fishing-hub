@@ -1,21 +1,38 @@
 {% include 'header.html' %}
 
-{% block content %}
-<section class="py-5">
-    <div class="container px-4 px-lg-5 mt-5">
-        <h1 class="fw-bolder">Your Cart</h1>
-        <ul class="list-group">
-            {% for item in cart_items %}
-                <li class="list-group-item">
-                    Product ID: {{ item.product_id }}<br>
-                    Diameter: {{ item.diameter }}<br>
-                    Meters: {{ item.meters }}<br>
-                    Price: {{ item.price }} Lek
-                </li>
-            {% endfor %}
-        </ul>
+<div class="container">
+    <h2>Your Cart</h2>
+    <div class="row">
+        {% if cart_details %}
+        {% for item in cart_details %}
+        <div class="col-md-12 mb-3">
+            <div class="d-flex align-items-center border p-3 rounded">
+                <img src="{{ item.img_url }}" class="img-thumbnail me-3" alt="{{ item.product_name }}"
+                     style="width: 150px; height: auto;">
+                <div class="flex-grow-1">
+                    <h5 class="mb-1"><strong>{{ item.product_name }}</strong></h5>
+                    <p class="mb-1">Quantity: {{ item.quantity }}</p>
+                    <p class="mb-1">Type: {{ item.type }}</p>
+                    <p class="mb-1">Price: <strong>{{ item.price }}</strong></p>
+                </div>
+                <form action="{{ url_for('remove_from_cart') }}" method="post" class="ms-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="category" value="{{ item.category }}">
+                    <input type="hidden" name="product_id" value="{{ item.product_id }}">
+                    <button type="submit" class="btn btn-danger">Remove</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>Your cart is empty.</p>
+        {% endif %}
     </div>
-</section>
-{% endblock %}
+    <div class="row mt-3">
+        <div class="col-12">
+            <a href="{{ url_for('checkout') }}" class="btn btn-primary">Checkout</a>
+        </div>
+    </div>
+</div>
 
 {% include 'footer.html' %}
