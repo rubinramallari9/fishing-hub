@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add FillesPanje</title>
+    <title>Add Fillespanje</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
 <div class="container">
-    <h1 class="mt-5">Add Fillespanja, Shockleader, Flourocarbon</h1>
+    <h1 class="mt-5">Add Filispanje</h1>
     <form method="POST" action="{{ url_for('add_product_fillespanje') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
             <label for="product_id">Product ID</label>
             <input type="number" class="form-control" id="product_id" name="product_id" required>

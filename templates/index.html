@@ -1,9 +1,10 @@
 {% include 'header.html' %}
 
 {% block content %}
-<header class="bg-dark py-5"
+<header class="bg-dark py-5 position-relative"
         style="background-image: url('{{ url_for('static', filename='assets/main_img.jpg') }}'); background-size: cover; background-position: center; height: 50vh;">
-    <div class="container px-4 px-lg-5 my-5">
+    <div class="position-absolute top-0 left-0 w-100 h-100 bg-dark opacity-50"></div>
+    <div class="container px-4 px-lg-5 my-5 position-relative">
     </div>
 </header>
 <br>
@@ -14,21 +15,21 @@
         </div>
         <div class="row banner-items justify-content-center"> <!-- Flexbox alignment for horizontal placement -->
             {% for product in items %}
-                <div class="col-md-2 mb-2 d-flex justify-content-center"> <!-- Adjusted column size and centering -->
+                <div class="col-md-3 mb-3 d-flex justify-content-center"> <!-- Adjusted column size and centering -->
                     <div class="card h-100 small-card"> <!-- Added small-card class -->
                         <!-- Product image -->
                         <img class="card-img-top" src="{{ product.img_url }}" alt="Product Image"/>
                         <!-- Product details -->
-                        <div class="card-body p-2"> <!-- Adjusted padding -->
+                        <div class="card-body p-3"> <!-- Adjusted padding -->
                             <div class="text-center">
                                 <!-- Product name -->
-                                <h5 class="fw-bolder">{{ product.product_name }}</h5>
+                                <h5 class="fw-bold">{{ product.product_name }}</h5>
                             </div>
                         </div>
                         <!-- Product actions -->
-                        <div class="card-footer p-1 pt-0 border-top-0 bg-transparent"> <!-- Adjusted padding -->
+                        <div class="card-footer p-2 border-top-0 bg-transparent"> <!-- Adjusted padding -->
                             <div class="text-center">
-                                <a class="btn btn-outline-dark mt-auto" href="{{ url_for('product_details', product_type=category, product_id=product.id) }}">View Details</a>
+                                <a class="btn btn-outline-dark" href="{{ url_for('product_details', product_type=category, product_id=product.id) }}">View Details</a>
                             </div>
                         </div>
                     </div>
@@ -38,62 +39,75 @@
     </div>
 {% endfor %}
 
-<!--<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">-->
+<!-- Swiper Carousel Section -->
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <div class="swiper-wrapper-container">
+            <div class="swiper-container">
+                <div class="swiper-wrapper">
+                    <!-- Add your Swiper slides here -->
+                </div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            </div>
+        </div>
+    </div>
+</section>
 
-<!--<section class="py-5">-->
-<!--    <div class="container px-4 px-lg-5 mt-5">-->
-<!--        &lt;!&ndash; Swiper Carousel Container &ndash;&gt;-->
-<!--        <div class="swiper-wrapper-container">-->
-<!--            <div class="swiper-container">-->
-<!--                <div class="swiper-wrapper">-->
-<!--                    &lt;!&ndash; Add your Swiper slides here &ndash;&gt;-->
-<!--                </div>-->
-<!--                &lt;!&ndash; Remove Pagination &ndash;&gt;-->
-<!--                <div class="swiper-button-next"></div>-->
-<!--                <div class="swiper-button-prev"></div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--</section>-->
-
-<!--&lt;!&ndash; Swiper JS &ndash;&gt;-->
-<!--<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>-->
-<!--<script>-->
-<!--    var swiper = new Swiper('.swiper-container', {-->
-<!--        slidesPerView: 3, // Adjust the number of slides shown-->
-<!--        spaceBetween: 10, // Adjust space between slides-->
-<!--        loop: true,-->
-<!--        autoplay: {-->
-<!--            delay: 4000,-->
-<!--            disableOnInteraction: false,-->
-<!--        },-->
-<!--        navigation: {-->
-<!--            nextEl: '.swiper-button-next',-->
-<!--            prevEl: '.swiper-button-prev',-->
-<!--        },-->
-<!--        breakpoints: {-->
-<!--            640: {-->
-<!--                slidesPerView: 1,-->
-<!--            },-->
-<!--            768: {-->
-<!--                slidesPerView: 2,-->
-<!--            },-->
-<!--            1024: {-->
-<!--                slidesPerView: 3,-->
-<!--            }-->
-<!--        }-->
-<!--    });-->
-<!--</script>-->
+<!-- Swiper JS -->
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+    var swiper = new Swiper('.swiper-container', {
+        slidesPerView: 3, // Adjust the number of slides shown
+        spaceBetween: 10, // Adjust space between slides
+        loop: true,
+        autoplay: {
+            delay: 4000,
+            disableOnInteraction: false,
+        },
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        breakpoints: {
+            640: {
+                slidesPerView: 1,
+            },
+            768: {
+                slidesPerView: 2,
+            },
+            1024: {
+                slidesPerView: 3,
+            }
+        }
+    });
+</script>
 
 <style>
+    .bg-dark {
+        position: relative;
+    }
+
+    .position-relative {
+        position: relative;
+    }
+
+    .position-absolute {
+        position: absolute;
+    }
+
+    .bg-dark.opacity-50 {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
     .category-banner {
         margin-bottom: 30px; /* Space below the banner */
     }
 
     .banner-text {
-        background-color: #b8c0ff;
+        background: linear-gradient(to right, #b8c0ff, #9bb6ff);
         color: #fff;
-        padding: 10px;
+        padding: 15px;
         text-align: center;
         border-radius: 5px;
         margin-bottom: 20px; /* Space between banner and products */
@@ -101,56 +115,56 @@
 
     .banner-items {
         display: flex;
-        flex-wrap: nowrap; /* Ensure items stay in a single line */
+        flex-wrap: wrap; /* Allow items to wrap */
         justify-content: center; /* Center the items horizontally */
-        gap: 10px; /* Adjust gap between cards */
+        gap: 15px; /* Adjust gap between cards */
     }
 
     .small-card {
         width: 100%;
-        max-width: 200px; /* Adjust card width */
+        max-width: 250px; /* Adjust card width */
         height: auto; /* Allow card height to adjust based on content */
-        margin: 0; /* Removed margin between cards */
     }
 
     .card-img-top {
         width: 100%;
-        height: 150px; /* Adjust height to make images smaller */
+        height: 180px; /* Adjust height to make images larger */
         object-fit: cover; /* Maintain aspect ratio */
     }
 
     .swiper-wrapper-container {
         position: relative;
+        overflow: hidden;
     }
 
     .swiper-container {
-        width: 80%; /* Adjust width */
-        height: 200px; /* Adjust height */
+        width: 100%; /* Adjust width */
+        height: 250px; /* Adjust height */
         margin: 0 auto; /* Center horizontally */
     }
 
     .swiper-slide img {
         width: auto;
         height: 100%; /* Make image fill height */
-        max-height: 200px; /* Ensure image doesn't exceed container height */
-        object-fit: contain; /* Maintain aspect ratio */
+        max-height: 250px; /* Ensure image doesn't exceed container height */
+        object-fit: cover; /* Maintain aspect ratio */
     }
 
     .swiper-button-next, .swiper-button-prev {
         color: #000; /* Customize arrow color */
-        width: 30px; /* Adjust width */
-        height: 30px; /* Adjust height */
+        width: 40px; /* Adjust width */
+        height: 40px; /* Adjust height */
         top: 50%;
         transform: translateY(-50%);
         z-index: 10;
     }
 
     .swiper-button-next {
-        right: 10px; /* Position to the right */
+        right: 20px; /* Position to the right */
     }
 
     .swiper-button-prev {
-        left: 10px; /* Position to the left */
+        left: 20px; /* Position to the left */
     }
 </style>
 

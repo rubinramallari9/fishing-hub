@@ -10,6 +10,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, current_user, UserMixin, login_required, login_user, logout_user
 import random
+from datetime import datetime, timedelta
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Configuration class
 class Config:
@@ -36,8 +39,11 @@ csrf = CSRFProtect(app)
 csrf.init_app(app)
 app.config.from_object(Config)
 app.secret_key = 'deal23-1B'  # Needed for session management
+app.config['SESSION_PERMANENT'] = False
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 
 
@@ -53,12 +59,16 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     points = db.Column(db.Integer, default=0)
+    orders = db.relationship('Orders', back_populates='user', lazy=True)
 
     def set_password(self, password):
         self.password = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
 
 class Fillespanje(db.Model):
     __bind_key__ = 'fillespanje'
@@ -85,7 +95,12 @@ class ProductVariationFillespanje(db.Model):
     meters = db.Column(db.String(250), nullable=False)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False, default=0)
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationFillespanje.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class ProductVariationFlourocarbon(db.Model):
     __bind_key__ = 'flourocarbon'
     __tablename__ = 'product_variation'
@@ -95,7 +110,12 @@ class ProductVariationFlourocarbon(db.Model):
     meters = db.Column(db.String(250), nullable=False)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False, default=0)
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationFlourocarbon.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class Shockleader(db.Model):
     __bind_key__ = 'shockleader'
     __tablename__ = 'shockleader'
@@ -113,7 +133,12 @@ class ProductVariationShockleader(db.Model):
     meters = db.Column(db.String(250), nullable=False)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, nullable=False, default=0)
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationShockleader.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class Allround(db.Model):
     __bind_key__ = 'allround'
     __tablename__ = 'allround'
@@ -133,7 +158,12 @@ class ProductVariationAllround(db.Model):
     action = db.Column(db.String(250), nullable=False)
 
     product = db.relationship('Allround', backref=db.backref('variations', lazy=True))
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationAllround.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class Surfcasting(db.Model):
     __bind_key__ = 'surfcasting'
     __tablename__ = 'surfcasting'
@@ -153,7 +183,12 @@ class ProductVariationSurfcasting(db.Model):
     action = db.Column(db.String(250), nullable=False)
 
     product = db.relationship('Surfcasting', backref=db.backref('variations', lazy=True))
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationSurfcasting.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class Beach(db.Model):
     __bind_key__ = 'beach'
     __tablename__ = 'beach'
@@ -173,7 +208,12 @@ class ProductVariationBeach(db.Model):
     action = db.Column(db.String(250), nullable=False)
 
     product = db.relationship('Beach', backref=db.backref('variations', lazy=True))
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationBeach.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class Spinning(db.Model):
     __bind_key__ = 'spinning'
     __tablename__ = 'spinning'
@@ -193,7 +233,12 @@ class ProductVariationSpinning(db.Model):
     action = db.Column(db.String(250), nullable=False)
 
     product = db.relationship('Spinning', backref=db.backref('variations', lazy=True))
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationSpinning.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class Bolognese(db.Model):
     __bind_key__ = 'bolognese'
     __tablename__ = 'bolognese'
@@ -213,7 +258,12 @@ class ProductVariationBolognese(db.Model):
     action = db.Column(db.String(250), nullable=False)
 
     product = db.relationship('Bolognese', backref=db.backref('variations', lazy=True))
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationBolognese.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class Jigg(db.Model):
     __bind_key__ = 'jigg'
     __tablename__ = 'jigg'
@@ -233,7 +283,12 @@ class ProductVariationJigg(db.Model):
     action = db.Column(db.String(250), nullable=False)
 
     product = db.relationship('Jigg', backref=db.backref('variations', lazy=True))
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationJigg.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class Bolentino(db.Model):
     __bind_key__ = 'bolentino'
     __tablename__ = 'bolentino'
@@ -253,7 +308,12 @@ class ProductVariationBolentino(db.Model):
     action = db.Column(db.String(250), nullable=False)
 
     product = db.relationship('Bolentino', backref=db.backref('variations', lazy=True))
-
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationBolentino.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 class Makineta(db.Model):
     __bind_key__ = 'makineta'
     __tablename__ = 'makineta'
@@ -272,6 +332,12 @@ class ProductVariationMakineta(db.Model):
     stock = db.Column(db.Integer, nullable=False, default=0)
 
     product = db.relationship('Makineta', backref=db.backref('variations', lazy=True))
+    @staticmethod
+    def update_stock(product_id, quantity):
+        variation = ProductVariationMakineta.query.filter_by(product_id=product_id).first()
+        if variation:
+            variation.stock -= quantity
+            db.session.commit()
 # Decorator to require login
 
 # Login form
@@ -326,13 +392,15 @@ def index():
 
     return render_template('index.html', categories=random_items)
 
+
+
 @app.route('/fillespanje')
 def fillespanje():
     products = db.session.query(Fillespanje).all()
     for product in products:
         variations = db.session.query(ProductVariationFillespanje).filter_by(product_id=product.id).all()
         product.has_stock = any(v.stock > 0 for v in variations)
-    return render_template("fillespanje.html", products=products)
+    return render_template("fillespanje.html", products=products, variations=variations)
 
 @app.route("/flourocarbon")
 def flourocarbon():
@@ -570,14 +638,54 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+class ChangeOrderStatusForm(FlaskForm):
+    status = SelectField('Status', choices=[
+        ('shipped', 'Shipped')
+    ], validators=[DataRequired()])
+    submit = SubmitField('Update Status')
 
 # Admin dashboard route
 @app.route('/admin')
-@login_required
 @admin_required
 def admin_dashboard():
-    # Admin dashboard content
-    return render_template('dashboard.html')
+    # Fetch total sales and ongoing orders
+    form = ChangeOrderStatusForm()  # Create an instance of the form
+    total_sales = int(db.session.query(db.func.sum(Orders.total_amount)).scalar() or 0)
+    ongoing_orders = Orders.query.filter_by(status='ongoing').all()
+    ongoing_orders_count = len(ongoing_orders)
+
+    return render_template('dashboard.html',
+                           total_sales=total_sales,
+                           ongoing_orders_count=ongoing_orders_count,
+                           orders=ongoing_orders,
+                           form=form)
+
+
+
+@app.route('/change_order_status/<int:order_id>', methods=['POST'])
+def change_order_status(order_id):
+    form = ChangeOrderStatusForm()
+    if form.validate_on_submit():
+        # Fetch the order and update its status
+        order = Orders.query.get_or_404(order_id)
+        order.status = form.status.data
+        db.session.commit()
+        flash('Order status updated successfully!', 'success')
+    else:
+        flash('Error updating order status. Please try again.', 'danger')
+
+    return redirect(url_for('admin_dashboard'))
+
+def get_sales_count():
+    # Implement logic to get the sales count
+    # Example data:
+    return Orders.query.filter_by(status='done').all()
+
+
+def get_ongoing_orders():
+    # Implement logic to get the list of ongoing orders
+    # Example data:
+    return Orders.query.filter_by(status='ongoing').all()
 
 @app.route('/dashboard/add_product/fillespanje', methods=['GET', 'POST'])
 def add_product_fillespanje():
@@ -811,12 +919,9 @@ def product_details(product_type, product_id):
                            category=product_type)
 
 
-
-
-
 @app.route('/add_to_cart/<string:category>/<int:product_id>', methods=['POST'])
 def add_to_cart(category, product_id):
-    variation_id = request.form.get('variation_id')  # This should not be None
+    variation_id = request.form.get('variation_id')
     if variation_id is None:
         flash('Error: No variation selected')
         return redirect(url_for('product_details', category=category, product_id=product_id))
@@ -836,7 +941,7 @@ def add_to_cart(category, product_id):
     cart.append({
         'category': category,
         'product_id': product_id,
-        'variation_id': int(variation_id),  # Ensure this is converted to int
+        'variation_id': int(variation_id),
         'quantity': int(quantity),
         'price': variation.price,
         'product_name': product.product_name,
@@ -850,7 +955,6 @@ def add_to_cart(category, product_id):
 
     flash('Product added to cart!')
     return redirect(url_for('cart'))
-
 
 
 def get_relevant_fields(category):
@@ -945,50 +1049,127 @@ class CheckoutForm(FlaskForm):
     address = StringField('Address', validators=[DataRequired()])
     submit = SubmitField('Order')
 
-@app.route('/checkout', methods=['GET', 'POST'])
-@login_required
-def checkout():
-    form = CheckoutForm()
-    flash_messages = get_flashed_messages()
-    # Retrieve user details if logged in
-    if current_user.is_authenticated:
-        if not form.email.data:
-            form.full_name.data = current_user.full_name
-            form.email.data = current_user.email
 
-    # Calculate total price
-    cart_items = session.get('cart', [])
-    total_price = 0
+class Orders(db.Model):
+    __tablename__ = 'orders'
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    total_amount = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+    phone_number = db.Column(db.String(20), nullable=False)
+    address = db.Column(db.String(255), nullable=False)
+
+    # Relationship back to the User model
+    user = db.relationship('User', back_populates='orders')
+
+    # Relationship to OrderItem
+    items = db.relationship('OrderItem', back_populates='order', cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f'<Order {self.id}>'
+
+
+class OrderItem(db.Model):
+    __tablename__ = 'order_items'
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    product_id = db.Column(db.Integer, nullable=False)
+    product_name = db.Column(db.String(255), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    img_url = db.Column(db.String(255))  # Add this field for product image URL
+    type = db.Column(db.String(255))  # Add this field for product type or other details
+
+    # Relationship to Orders
+    order = db.relationship('Orders', back_populates='items')
+
+    def __repr__(self):
+        return f'<OrderItem {self.id}>'
+
+
+def calculate_total(cart_items):
+    total = 0
     for item in cart_items:
-        category = item['category']
-        product_id = item['product_id']
-        variation_id = item['variation_id']
-        quantity = item['quantity']
+        total += item['price'] * item['quantity']
+    return total
 
-        # Dynamically get the product and variation models
-        model = globals().get(category.capitalize())
-        variation_model = globals().get(f'ProductVariation{category.capitalize()}')
+def get_cart_items():
+    cart = session.get('cart', [])
+    # Transform cart session data to the required format if necessary
+    return cart
 
-        # Fetch the product and variation
-        product = model.query.get(product_id) if model else None
-        variation = variation_model.query.get(variation_id) if variation_model else None
+@app.route('/order_summary/<int:order_id>')
+@login_required
+def order_summary(order_id):
+    order = Orders.query.get(order_id)
+    if order and order.user_id == current_user.id:
+        return render_template('order_summary.html', order=order)
+    return redirect(url_for('index'))
 
-        if product and variation:
-            total_price += variation.price * quantity
 
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    if not current_user.is_authenticated:
+        flash('You need to be logged in to access the checkout page.', 'warning')
+        return redirect(url_for('login'))
+
+    form = CheckoutForm()
     if form.validate_on_submit():
-        # Process the order
-        # (Here you would typically save order details to the database)
+        # Collect form data
+        full_name = form.full_name.data
+        phone_number = form.phone_number.data
+        email = form.email.data
+        address = form.address.data
 
-        flash('Order placed successfully!', 'success')
-        session.pop('cart', None)  # Clear the cart
+        # Calculate total amount
+        cart_items = session.get('cart', [])
+        total_amount = sum(item['price'] * item['quantity'] for item in cart_items)
+
+        # Create a new order
+        order = Orders(
+            customer_id=current_user.id,
+            total_amount=total_amount,
+            status='ongoing',
+            email=email,
+            phone_number=phone_number,
+            address=address
+        )
+        db.session.add(order)
+        db.session.commit()  # Commit to get the order ID
+
+        # Add order items
+        for item in cart_items:
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=item['product_id'],
+                product_name=item['product_name'],
+                quantity=item['quantity'],
+                price=item['price'],
+                img_url=item['img_url'],
+                type=item['type']
+            )
+            db.session.add(order_item)
+
+        db.session.commit()
+
+        # Clear the cart
+        session.pop('cart', None)
+
+        # Redirect to confirmation or order summary page
         return redirect(url_for('index'))
 
-    # Display any flash messages
-    flash_messages = get_flashed_messages(with_categories=True)
+    return render_template('checkout.html', form=form, total_amount=calculate_total(session.get('cart', [])))
 
-    return render_template('checkout.html', form=form, total_price=total_price, flash_messages=flash_messages)
+
+def calculate_total(cart_items):
+    return sum(item['price'] * item['quantity'] for item in cart_items)
+
+
+
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    with app.app_context():
+        db.create_all()
+        app.run(debug=True)
