@@ -5,13 +5,17 @@ from wtforms import StringField, FloatField, PasswordField,IntegerField, SelectF
 from wtforms.validators import DataRequired, Email, Optional, EqualTo
 from functools import wraps
 from random import sample
-from sqlalchemy import func
+from sqlalchemy import func, inspect
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, current_user, UserMixin, login_required, login_user, logout_user
 import random
 from datetime import datetime, timedelta
 import logging
+from flask_session import Session
+
+
+
 logging.basicConfig(level=logging.DEBUG)
 
 # Configuration class
@@ -28,7 +32,8 @@ class Config:
         'bolognese': 'sqlite:///bolognese.db',
         'jigg': 'sqlite:///jigg.db',
         'bolentino': 'sqlite:///bolentino.db',
-        'makineta': 'sqlite:///makineta.db'
+        'makineta': 'sqlite:///makineta.db',
+        'lures': 'sqlite:///lures.db'
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -44,7 +49,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
 
 
 
@@ -338,6 +344,30 @@ class ProductVariationMakineta(db.Model):
         if variation:
             variation.stock -= quantity
             db.session.commit()
+
+class Lures(db.Model):
+    __bind_key__ = 'lures'
+    __tablename__ = 'lures'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+
+    variations = db.relationship('ProductVariationLures', backref='lure', lazy=True)
+
+
+class ProductVariationLures(db.Model):
+    __bind_key__ = 'lures'
+    __tablename__ = 'lures_variation'
+
+    id = db.Column(db.Integer, primary_key=True)
+    grams = db.Column(db.Integer, nullable=False)
+    color_code = db.Column(db.String(50), nullable=False)
+    img_url = db.Column(db.String(255), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False)
+    lure_id = db.Column(db.Integer, db.ForeignKey('lures.id'), nullable=False)
+
 # Decorator to require login
 
 # Login form
@@ -482,6 +512,44 @@ def makineta():
         product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("makineta.html", products=products)
 
+@app.route('/lures')
+def lures():
+    products = Lures.query.all()
+    return render_template('lures.html', products=products)
+
+@app.route('/lure/<int:lure_id>')
+def lure_details(lure_id):
+    lure = Lures.query.get_or_404(lure_id)
+    variations = ProductVariationLures.query.filter_by(lure_id=lure_id).all()
+
+    # Group variations by grams
+    variations_by_grams = {}
+    max_stock = 0
+    for variation in variations:
+        grams = variation.grams
+        if grams not in variations_by_grams:
+            variations_by_grams[grams] = []
+        variation_dict = {
+            'id': variation.id,
+            'img_url': variation.img_url,
+            'color_code': variation.color_code,
+            'price': variation.price,
+            'stock': variation.stock
+        }
+        variations_by_grams[grams].append(variation_dict)
+        # Update max_stock
+        if variation.stock > max_stock:
+            max_stock = variation.stock
+
+    # Get the first image URL
+    first_img = None
+    for variations in variations_by_grams.values():
+        if variations:
+            first_img = variations[0]['img_url']
+            break
+
+    return render_template('lures_details.html', lure=lure, variations_by_grams=variations_by_grams, first_img=first_img, max_stock=max_stock, random_products=random_())
+
 
 @app.route("/kontakto")
 def kontakto():
@@ -581,11 +649,11 @@ def login():
 
 
 @app.route('/logout')
-@login_required
 def logout():
     logout_user()
+
     flash('You have been logged out.', 'info')
-    return redirect(url_for('login'))
+    return redirect(url_for('index'))
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -900,7 +968,7 @@ def product_details(product_type, product_id):
         relevant_fields = ['meters', 'action']
     elif product_type.lower() == 'makineta' or product_type.lower() == "reel":
         relevant_fields = ['size']
-    elif product_type.lower() in ['fillespanje', 'filispanje']:
+    elif product_type.lower() in ['fillespanje', 'filispanje', 'flourocarbon']:
         relevant_fields = ['diameter', 'meters']
     else:
         relevant_fields = ['diameter']
@@ -918,24 +986,38 @@ def product_details(product_type, product_id):
                            random_products=random_(),
                            category=product_type)
 
+def get_variation_type(variation):
+    # Automatically get relevant fields based on the variation object
+    fields = inspect(variation).mapper.column_attrs.keys()
+    # Build the 'type' string
+    return ', '.join([f"{field}: {getattr(variation, field)}" for field in fields if getattr(variation, field)])
 
 @app.route('/add_to_cart/<string:category>/<int:product_id>', methods=['POST'])
 def add_to_cart(category, product_id):
     variation_id = request.form.get('variation_id')
-    if variation_id is None:
+    quantity = request.form.get('quantity', 1)
+
+    if not variation_id:
         flash('Error: No variation selected')
         return redirect(url_for('product_details', category=category, product_id=product_id))
-
-    quantity = request.form.get('quantity', 1)
 
     # Retrieve or initialize the cart
     cart = session.get('cart', [])
 
     # Get the product and variation from the database
-    product_model = globals()[category.capitalize()]
-    variation_model = globals()[f'ProductVariation{category.capitalize()}']
+    product_model = globals().get(category.capitalize())
+    variation_model = globals().get(f'ProductVariation{category.capitalize()}')
+
+    if not product_model or not variation_model:
+        flash('Error: Invalid category or variation model')
+        return redirect(url_for('product_details', category=category, product_id=product_id))
+
     product = db.session.get(product_model, product_id)
     variation = db.session.get(variation_model, int(variation_id))
+
+    if not product or not variation:
+        flash('Error: Product or variation not found')
+        return redirect(url_for('product_details', category=category, product_id=product_id))
 
     # Add the product to the cart with the variation
     cart.append({
@@ -957,14 +1039,18 @@ def add_to_cart(category, product_id):
     return redirect(url_for('cart'))
 
 
+
+
 def get_relevant_fields(category):
     category = category.lower()
     if category in ['spinning', 'allround', 'surfcasting', 'bolognese', 'jigg', 'bolentino']:
         return ['meters', 'action']
     elif category == 'makineta':
         return ['size']
-    elif category in ['fillespanje', 'filispanje']:
+    elif category in ['fillespanje', 'filispanje', 'flourocarbon']:
         return ['diameter', 'meters']
+    elif category == 'lures':
+        return ['grams', 'color_code']
     else:
         return ['diameter']
 
@@ -999,17 +1085,31 @@ def cart():
 
         # Build cart details with error handling
         try:
-            cart_details.append({
-                'category': category,
-                'product_id': product_id,  # Ensure this key is present
-                'variation_id': item['variation_id'],  # Ensure this key is present
-                'img_url': product.img_url,
-                'product_name': product.product_name,
-                'quantity': quantity,
-                'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)]),
-                'price': variation.price,
-                'item_total_price': item_total_price
-            })
+            if category!="Lures":
+                cart_details.append({
+                    'category': category,
+                    'product_id': product_id,  # Ensure this key is present
+                    'variation_id': item['variation_id'],  # Ensure this key is present
+                    'img_url': product.img_url,
+                    'product_name': product.product_name,
+                    'quantity': quantity,
+                    'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)]),
+                    'price': variation.price,
+                    'item_total_price': item_total_price
+                })
+            else:
+                cart_details.append({
+                    'category': category,
+                    'product_id': product_id,  # Ensure this key is present
+                    'variation_id': item['variation_id'],  # Ensure this key is present
+                    'img_url': variation.img_url,
+                    'product_name': product.name,
+                    'quantity': quantity,
+                    'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)]),
+                    'price': variation.price,
+                    'item_total_price': item_total_price
+                })
+
         except AttributeError as e:
             flash(f"Error processing item in cart: {e}")
             continue
@@ -1022,6 +1122,7 @@ def cart():
 def remove_from_cart():
     category = request.form.get('category')
     product_id = request.form.get('product_id')
+    type = request.form.get('type')
 
     print(f"Removing item from cart - Category: {category}, Product ID: {product_id}")
 
@@ -1031,9 +1132,9 @@ def remove_from_cart():
 
     # Get the cart from the session
     cart = session.get('cart', [])
-
+    print(cart)
     # Filter out the item to be removed
-    cart = [item for item in cart if not (item['category'] == category and item['product_id'] == int(product_id))]
+    cart = [item for item in cart if not (item['category'] == category and item['product_id'] == int(product_id) and item['type'] == type)]
 
     # Update the session
     session['cart'] = cart

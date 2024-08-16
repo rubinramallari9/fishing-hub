@@ -4,10 +4,9 @@
 <header class="bg-dark py-5"
         style="background-image: url('../static/assets/1.jpg'); background-size: cover; background-position: center; height: 50vh;">
     <div class="container px-4 px-lg-5 my-5 d-flex align-items-center justify-content-center" style="height: 100%;">
-        <h1 class="text-white fw-bold">Flourocarbon</h1>
+        <h1 class="text-white fw-bold">Imitues</h1>
     </div>
 </header>
-
 
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
@@ -16,27 +15,20 @@
                 <div class="col mb-5">
                     <div class="card h-100">
                         <!-- Product image-->
-                        <img class="card-img-top" src="{{ product.img_url }}" alt="..." />
+                        <img class="card-img-top" src="{{ product.variations[0].img_url }}" alt="..." />
                         <!-- Product details-->
                         <div class="card-body p-4">
                             <div class="text-center">
                                 <!-- Product name-->
-                                <h5 class="fw-bolder">{{ product.product_name }}</h5>
-
-                                <!-- Product variations-->
-                                {% for variation in product.variations %}
-                                    <p>{{ variation.diameter }} - {{ variation.meters }} meters: {{ variation.price }} Lek (Stock: {{ variation.stock }})</p>
-                                {% endfor %}
+                                <h5 class="fw-bolder">{{ product.name }}</h5>
+                                <!-- Product description-->
+                                <p class="text-muted">{{ product.description }}</p>
                             </div>
                         </div>
                         <!-- Product actions-->
                         <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
                             <div class="text-center">
-                                {% if product.has_stock %}
-                                    <a class="btn btn-outline-dark mt-auto" href="{{ url_for('product_details', product_type='flourocarbon', product_id=product.id) }}">View Details</a>
-                                {% else %}
-                                    <span class="btn btn-outline-secondary mt-auto">Out of Stock</span>
-                                {% endif %}
+                                <a class="btn btn-outline-dark mt-auto" href="{{ url_for('lure_details', lure_id=product.id) }}">View Details</a>
                             </div>
                         </div>
                     </div>

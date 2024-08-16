@@ -10,6 +10,7 @@
 <div class="container">
     <h1 class="mt-5">Add Flourocarbon</h1>
     <form method="POST" action="{{ url_for('add_product_flourocarbon') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
             <label for="product_id">Product ID</label>
             <input type="number" class="form-control" id="product_id" name="product_id" required>

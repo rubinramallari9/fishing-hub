@@ -11,32 +11,34 @@
         font-weight: bold;
         font-size: 2rem;
     }
+    .progress-bar {
+        transition: width 0.5s;
+    }
 </style>
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row">
             <div class="col-lg-6">
-                <img class="img-fluid" src="{{ product.img_url }}" alt="{{ product.product_name }}"/>
+                <img id="mainImg" class="img-fluid" src="{{ first_img }}" alt="{{ lure.name }}"/>
             </div>
             <div class="col-lg-6">
-                <h2 class="fw-bolder">{{ product.product_name }}</h2>
-                <form id="productForm" method="POST"
-                      action="{{ url_for('add_to_cart', category=product_type, product_id=product.id) }}">
+                <h2 class="fw-bolder">{{ lure.name }}</h2>
+                <form id="productForm" method="POST" action="{{ url_for('add_to_cart', category='Lures', product_id=lure.id) }}">
                     <!-- CSRF Token Field -->
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
                     <!-- Product variations -->
                     <div class="mb-3">
                         <label for="variationSelect" class="form-label">Select Variation</label>
-                        <select id="variationSelect" class="form-select" onchange="updateStockInfo()">
+                        <select id="variationSelect" name="variation_id" class="form-select" onchange="updateStockInfo()">
                             <option value="" disabled selected>Select your option</option>
-                            {% for variation in variations %}
-                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}"
-                                    data-price="{{ variation.price }}">
-                                {% for field in relevant_fields %}
-                                    {{ variation[field] }}{% if not loop.last %} - {% endif %}
+                            {% for grams, variations in variations_by_grams.items() %}
+                                {% for variation in variations %}
+                                    <option value="{{ variation.id }}" data-stock="{{ variation.stock }}"
+                                            data-price="{{ variation.price }}" data-img-url="{{ variation.img_url }}">
+                                        {{ grams }} grams - {{ variation.color_code }}
+                                    </option>
                                 {% endfor %}
-                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -44,8 +46,7 @@
                     <!-- Quantity Input -->
                     <div class="mb-3">
                         <label for="quantityInput" class="form-label">Quantity</label>
-                        <input type="number" id="quantityInput" name="quantity" class="form-control" value="1" min="1"
-                               oninput="updateStockInfo()">
+                        <input type="number" id="quantityInput" name="quantity" class="form-control" value="1" min="1" oninput="updateStockInfo()">
                     </div>
 
                     <!-- Stock Bar -->
@@ -63,10 +64,8 @@
                     </div>
 
                     <!-- Add to Cart Button -->
-                    <input type="hidden" id="variationIdInput" name="variation_id" value="">
-                    <input type="hidden" name="product_name" value="{{ product.product_name }}">
-                    <input type="hidden" name="product_type" value="{{ product_type }}">
-                    <button type="submit" id="addToCartBtn" class="btn btn-primary">Add to Cart</button>
+                    <input type="hidden" name="variation_id" value="{{ lure.id }}">
+                    <button type="submit" id="addToCartBtn" class="btn btn-primary" disabled>Add to Cart</button>
                 </form>
             </div>
         </div>
@@ -83,6 +82,7 @@
         var selectedOption = select.options[select.selectedIndex];
         var stock = selectedOption.getAttribute('data-stock');
         var price = selectedOption.getAttribute('data-price');
+        var imgUrl = selectedOption.getAttribute('data-img-url');
         var quantityInput = document.getElementById('quantityInput');
         var quantity = parseInt(quantityInput.value, 10);
 
@@ -92,7 +92,7 @@
         var priceInfo = document.getElementById('priceInfo');
         var priceText = document.getElementById('priceText');
         var addToCartBtn = document.getElementById('addToCartBtn');
-        var variationIdInput = document.getElementById('variationIdInput');
+        var mainImg = document.getElementById('mainImg');
 
         if (stock && price) {
             var maxStock = parseInt(stockBar.getAttribute('aria-valuemax'), 10);
@@ -108,11 +108,13 @@
             stockInfo.style.display = 'block';
             priceInfo.style.display = 'block';
 
-            // Update hidden variation ID
-            variationIdInput.value = selectedOption.value;
+            // Update the main image
+            if (imgUrl) {
+                mainImg.src = imgUrl;
+            }
 
-            // Disable "Add to Cart" button if quantity exceeds stock
-            addToCartBtn.disabled = (quantity > stock || quantity <= 0);
+            // Disable "Add to Cart" button if quantity exceeds stock or no variation selected
+            addToCartBtn.disabled = (quantity > stock || quantity <= 0 || !selectedOption.value);
         } else {
             // If no stock or price available, disable the button
             addToCartBtn.disabled = true;

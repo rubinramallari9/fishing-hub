@@ -53,7 +53,6 @@
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="{{ url_for('fillespanje') }}">Filispanje</a></li>
                         <li><a class="dropdown-item" href="{{ url_for('flourocarbon') }}">Flourocarbon</a></li>
-                        <li><a class="dropdown-item" href="{{ url_for('shockleader') }}">Shockleader</a></li>
                         <li class="dropdown-submenu">
                             <a class="dropdown-item dropdown-toggle" href="#">Kallama</a>
                             <ul class="dropdown-menu">
@@ -66,36 +65,35 @@
                             </ul>
                         </li>
                         <li><a class="dropdown-item" href="{{url_for('makineta')}}">Makineta</a></li>
-                        <li><a class="dropdown-item" href="#!">Imitues</a></li>
+                        <li><a class="dropdown-item" href="{{url_for('lures')}}">Imitues</a></li>
                     </ul>
                 </li>
                 <li class="nav-item"><a class="nav-link" href="{{url_for('kontakto')}}">Kontakto</a></li>
             </ul>
             <form class="d-flex">
 
-                    <button  class="btn btn-outline-dark me-2" type="submit" >
-                        <i class="bi-cart-fill me-1"></i>
-                        <a href="{{url_for('cart')}}">Cart</a>
-                    </button>
+                <button class="btn btn-outline-dark me-2" type="submit">
+                    <i class="bi-cart-fill me-1"></i>
+                    <a href="{{url_for('cart')}}">Cart</a>
+                </button>
 
             </form>
             {% if current_user.is_authenticated %}
             <form class="d-flex">
-                <button class="btn btn-outline-dark" type="submit">
+                <button class="btn btn-outline-dark" type="button">
                     <i class="bi bi-person"></i>
                 </button>
-                <button class="btn btn-outline-dark" type="submit">
-                    <a href="{{url_for('logout')}}">Log Out</a>
-                </button>
+                <a class="btn btn-outline-dark" href="{{ url_for('logout') }}">Log Out</a>
             </form>
             {% else %}
             <form class="d-flex">
-                <button class="btn btn-outline-dark" type="submit">
+                <button class="btn btn-outline-dark" type="button">
                     <i class="bi bi-box-arrow-in-right"></i>
-                    <a href="{{url_for('signup')}}">Hy/Regjistrohu</a>
+                    <a href="{{ url_for('signup') }}">Hy/Regjistrohu</a>
                 </button>
             </form>
             {% endif %}
+
         </div>
     </div>
 </nav>

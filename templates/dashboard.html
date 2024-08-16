@@ -85,12 +85,15 @@
 </head>
 <body>
     <div class="sidebar">
-        <h4>Admin Dashboard</h4>
+        <br>
+        <br><br>
         <a href="{{ url_for('index') }}">Home</a>
         <a href="{{ url_for('add_product_fillespanje') }}">Add Fillespanje</a>
         <a href="{{ url_for('add_product_flourocarbon') }}">Add Flourocarbon</a>
         <a href="{{ url_for('add_product_shockleader') }}">Add Shockleader</a>
+        <a href="{{ url_for('add_product_shockleader') }}">Add Kallama</a>
         <a href="{{ url_for('add_productMakineta') }}">Add Makineta</a>
+        <a href="{{ url_for('add_product_shockleader') }}">Add Imitus</a>
     </div>
     <div class="content">
         <h1>Dashboard</h1>
@@ -120,7 +123,7 @@
                         <ul class="list-group">
                             {% for item in order.items %}
                                 <li class="list-group-item">
-                                    {{ item.product_name }} - Quantity: {{ item.quantity }} - Price: {{ item.price }} Lek
+                                    {{ item.product_name }} {{item.type}}- Quantity: {{ item.quantity }} - Price: {{ item.price }} Lek
                                 </li>
                             {% endfor %}
                         </ul>
