@@ -24,7 +24,6 @@ class Config:
     SQLALCHEMY_BINDS = {
         'fillespanje': 'sqlite:///fillespanje.db',
         'flourocarbon': 'sqlite:///flourocarbon.db',
-
         'allround': 'sqlite:///allround.db',
         'surfcasting': 'sqlite:///surfcasting.db',
         'beach': 'sqlite:///beach.db',
@@ -33,7 +32,9 @@ class Config:
         'jigg': 'sqlite:///jigg.db',
         'bolentino': 'sqlite:///bolentino.db',
         'makineta': 'sqlite:///makineta.db',
-        'lures': 'sqlite:///lures.db'
+        'lures': 'sqlite:///lures.db',
+        'grepa': 'sqlite:///grepa.db',
+        'aksesore': 'sqlite:///aksesore.db'
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -348,6 +349,49 @@ class ProductVariationLures(db.Model):
     stock = db.Column(db.Integer, nullable=False)
     lure_id = db.Column(db.Integer, db.ForeignKey('lures.id'), nullable=False)
 
+class Grepa(db.Model):
+    __bind_key__ = "grepa"
+    __tablename__ = "grepa"
+
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(1000), nullable=False)
+    description = db.Column(db.String(1000))
+
+
+class ProductVariationGrepa(db.Model):
+    __bind_key__ = "grepa"
+    __tablename__ = "grepa_variation"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('grepa.id'), nullable=False)
+    size = db.Column(db.String(250), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False, default=0)
+
+
+    product = db.relationship('Grepa', backref=db.backref('variations', lazy=True))
+
+class Aksesore(db.Model):
+    __bind_key__ = "aksesore"
+    __tablename__ = "aksesore"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_name = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(1000), nullable=False)
+    description = db.Column(db.String(1000))
+
+class ProductVariationAksesore(db.Model):
+    __bind_key__ = "aksesore"
+    __tablename__ = "aksesore_variation"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('aksesore.id'), nullable=False)
+    type = db.Column(db.String(250), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False, default=0)
+
+
+    product = db.relationship('Aksesore', backref=db.backref('variations', lazy=True))
+
 # Decorator to require login
 
 # Login form
@@ -401,6 +445,39 @@ def index():
 
     return render_template('index.html', categories=random_items)
 
+@app.route('/aksesore')
+def aksesore():
+    products = db.session.query(Aksesore).all()
+    for product in products:
+        variations = db.session.query(ProductVariationAksesore).filter_by(product_id=product.id).all()
+        product.has_stock = any(v.stock > 0 for v in variations)
+    return render_template("aksesore.html", products=products, variations=variations)
+@app.route('/add_test_product_aksesore')
+def add_test_product_aksesore():
+    # Create a test product
+    test_product = Aksesore(
+        product_name="Test Product Aksesore",
+        img_url="https://example.com/test-product-aksesore.jpg",
+        description="This is a test product for Aksesore category."
+    )
+
+    # Add the product to the session
+    db.session.add(test_product)
+    db.session.commit()  # Save the product to generate the ID
+
+    # Create a variation for the test product
+    test_variation = ProductVariationAksesore(
+        product_id=test_product.id,
+        type="Standard",
+        price=19.99,
+        stock=50
+    )
+
+    # Add the variation to the session
+    db.session.add(test_variation)
+    db.session.commit()  # Save the variation
+
+    return "Test product for Aksesore added successfully!"
 
 
 @app.route('/fillespanje')
@@ -418,6 +495,15 @@ def flourocarbon():
         variations = db.session.query(ProductVariationFlourocarbon).filter_by(product_id=product.id).all()
         product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("flourocarbon.html", products=products)
+
+
+@app.route('/grepa')
+def grepa():
+    products = db.session.query(Grepa).all()
+    for product in products:
+        variations = db.session.query(ProductVariationGrepa).filter_by(product_id=product.id).all()
+        product.has_stock = any(v.stock > 0 for v in variations)
+    return render_template("grepa.html", products=products, variations=variations)
 
 
 
