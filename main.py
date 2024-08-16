@@ -24,7 +24,7 @@ class Config:
     SQLALCHEMY_BINDS = {
         'fillespanje': 'sqlite:///fillespanje.db',
         'flourocarbon': 'sqlite:///flourocarbon.db',
-        'shockleader': 'sqlite:///shockleader.db',
+
         'allround': 'sqlite:///allround.db',
         'surfcasting': 'sqlite:///surfcasting.db',
         'beach': 'sqlite:///beach.db',
@@ -122,29 +122,9 @@ class ProductVariationFlourocarbon(db.Model):
         if variation:
             variation.stock -= quantity
             db.session.commit()
-class Shockleader(db.Model):
-    __bind_key__ = 'shockleader'
-    __tablename__ = 'shockleader'
-    id = db.Column(db.Integer, primary_key=True)
-    product_name = db.Column(db.String(250), nullable=False)
-    img_url = db.Column(db.String(1000), nullable=False)
-    description = db.Column(db.String(1000))
 
-class ProductVariationShockleader(db.Model):
-    __bind_key__ = 'shockleader'
-    __tablename__ = 'product_variation'
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('shockleader.id'), nullable=False)
-    diameter = db.Column(db.String(250), nullable=False)
-    meters = db.Column(db.String(250), nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    stock = db.Column(db.Integer, nullable=False, default=0)
-    @staticmethod
-    def update_stock(product_id, quantity):
-        variation = ProductVariationShockleader.query.filter_by(product_id=product_id).first()
-        if variation:
-            variation.stock -= quantity
-            db.session.commit()
+
+
 class Allround(db.Model):
     __bind_key__ = 'allround'
     __tablename__ = 'allround'
@@ -399,7 +379,7 @@ class ProductForm(FlaskForm):
 # Index route
 @app.route('/')
 def index():
-    categories = ['fillespanje', 'flourocarbon', 'shockleader', 'allround', 'surfcasting', 'spinning', 'bolognese',
+    categories = ['fillespanje', 'flourocarbon',  'allround', 'surfcasting', 'spinning', 'bolognese',
                   'jigg', 'bolentino', 'makineta']
     category_data = {}
     categories = {
@@ -440,13 +420,7 @@ def flourocarbon():
         product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("flourocarbon.html", products=products)
 
-@app.route('/shockleader')
-def shockleader():
-    products = db.session.query(Shockleader).all()
-    for product in products:
-        variations = db.session.query(ProductVariationShockleader).filter_by(product_id=product.id).all()
-        product.has_stock = any(v.stock > 0 for v in variations)
-    return render_template("shockleader.html", products=products)
+
 
 @app.route('/allround')
 def allround():
@@ -559,7 +533,6 @@ def kontakto():
 product_models = {
     'fillespanje': (Fillespanje, ProductVariationFillespanje),
     'flourocarbon': (Flourocarbon, ProductVariationFlourocarbon),
-    'shockleader': (Shockleader, ProductVariationShockleader),
     'allround': (Allround, ProductVariationAllround),
     'surfcasting': (Surfcasting, ProductVariationSurfcasting),
     'beach': (Beach, ProductVariationBeach),
@@ -856,55 +829,6 @@ def add_product_flourocarbon():
 
     return render_template('add_flourocarbon.html')
 
-@app.route('/dashboard/add_product/shockleader', methods=['GET', 'POST'])
-def add_product_shockleader():
-    if request.method == 'POST':
-        product_id = request.form['product_id']
-        name = request.form['name']
-        img_url = request.form['img_url']
-        description = request.form.get('description', '')
-
-        print(f"Product ID: {product_id}, Name: {name}, Image URL: {img_url}, Description: {description}")
-
-        variation_diameters = request.form.getlist('variations[][diameter]')
-        variation_meters = request.form.getlist('variations[][meters]')
-        variation_prices = request.form.getlist('variations[][price]')
-        variation_stocks = request.form.getlist('variations[][stock]')
-
-        print(f"Variation Diameters: {variation_diameters}")
-        print(f"Variation Meters: {variation_meters}")
-        print(f"Variation Prices: {variation_prices}")
-        print(f"Variation Stocks: {variation_stocks}")
-
-        new_product = Shockleader(
-            id=product_id,
-            product_name=name,
-            img_url=img_url,
-            description=description
-        )
-        db.session.add(new_product)
-        db.session.commit()
-
-        for i in range(len(variation_diameters)):
-            diameter = variation_diameters[i]
-            meters = variation_meters[i]
-            price = variation_prices[i]
-            stock = variation_stocks[i]
-            variation = ProductVariationShockleader(
-                product_id=new_product.id,
-                diameter=diameter,
-                meters=meters,
-                price=float(price),
-                stock=int(stock)
-            )
-            db.session.add(variation)
-
-        db.session.commit()
-
-        flash('Product and its variations added successfully!', 'success')
-        return redirect(url_for('admin_dashboard'))
-
-    return render_template('add_shockleader.html')
 
 
 
