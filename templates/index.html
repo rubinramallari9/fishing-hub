@@ -1,10 +1,10 @@
 {% include 'header.html' %}
 
 {% block content %}
-<header class="bg-dark py-5 position-relative"
-        style="background-image: url('{{ url_for('static', filename='assets/main_img.jpg') }}'); background-size: cover; background-position: center; height: 50vh;">
-    <div class="position-absolute top-0 left-0 w-100 h-100 bg-dark opacity-50"></div>
-    <div class="container px-4 px-lg-5 my-5 position-relative">
+<header class="bg-dark py-5"
+        style="background-image: url('../static/assets/1.jpg'); background-size: cover; background-position: center; height: 50vh;">
+    <div class="container px-4 px-lg-5 my-5 d-flex align-items-center justify-content-center" style="height: 100%;">
+        <h1 class="text-white fw-bold"></h1>
     </div>
 </header>
 <br>
@@ -101,35 +101,40 @@
     }
 
     .category-banner {
-        margin-bottom: 30px; /* Space below the banner */
+        margin-bottom: 30px;
+        width: 90%; /* Reduced width of the banner */
+        max-width: 1200px; /* Ensure banner does not exceed this width */
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .banner-text {
-        background: linear-gradient(to right, #b8c0ff, #9bb6ff);
-        color: #fff;
-        padding: 15px;
+        background: linear-gradient(to right, #f7850d, #ff9a3d);
+        color: #000; /* Set text color to black */
+        padding: 25px;
         text-align: center;
-        border-radius: 5px;
-        margin-bottom: 20px; /* Space between banner and products */
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-weight: bold; /* Make the text thicker */
     }
 
     .banner-items {
         display: flex;
-        flex-wrap: wrap; /* Allow items to wrap */
-        justify-content: center; /* Center the items horizontally */
-        gap: 15px; /* Adjust gap between cards */
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px; /* Increased gap to make cards sit a bit more loosely */
     }
 
     .small-card {
         width: 100%;
-        max-width: 250px; /* Adjust card width */
-        height: auto; /* Allow card height to adjust based on content */
+        max-width: 280px; /* Increased max-width for larger cards */
+        height: auto;
     }
 
     .card-img-top {
         width: 100%;
-        height: 180px; /* Adjust height to make images larger */
-        object-fit: cover; /* Maintain aspect ratio */
+        height: 220px; /* Increased height for larger images */
+        object-fit: cover;
     }
 
     .swiper-wrapper-container {

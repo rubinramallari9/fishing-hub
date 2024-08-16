@@ -374,7 +374,7 @@ class ProductForm(FlaskForm):
                                                  ('bolognese', 'Bolognese'),
                                                  ('jigg', 'JIGG'),
                                                  ('bolentino', 'Bolentino'),
-                                                 ('makineta', 'Makineta')])
+                                                ('makineta', 'Makineta')])
 
 # Index route
 @app.route('/')
@@ -385,12 +385,11 @@ def index():
     categories = {
         'Fillespanje': Fillespanje.query.all(),
         'Flourocarbon': Flourocarbon.query.all(),
-        # 'Shockleader': Shockleader.query.all(),
         # 'All round': Allround.query.all(),
-        # 'Surfcasting': Surfcasting.query.all(),
-        # 'Spinning': Spinning.query.all(),
-        # 'Bolognese': Bolognese.query.all(),
-        # 'Jigg': Jigg.query.all(),
+        'Surfcasting': Surfcasting.query.all(),
+        'Spinning': Spinning.query.all(),
+        'Bolognese': Bolognese.query.all(),
+        'Jigg': Jigg.query.all(),
         # 'Bolentino': Bolentino.query.all(),
         'Makineta': Makineta.query.all()
     }
@@ -830,6 +829,73 @@ def add_product_flourocarbon():
     return render_template('add_flourocarbon.html')
 
 
+@app.route('/dashboard/add_product/<category>', methods=['GET', 'POST'])
+def add_product(category):
+    models = {
+        'allround': (Allround, ProductVariationAllround),
+        'surfcasting': (Surfcasting, ProductVariationSurfcasting),
+        'beach': (Beach, ProductVariationBeach),
+        'spinning': (Spinning, ProductVariationSpinning),
+        'bolognese': (Bolognese, ProductVariationBolognese),
+        'jigg': (Jigg, ProductVariationJigg),
+        'bolentino': (Bolentino, ProductVariationBolentino)
+    }
+
+    if category not in models:
+        flash('Invalid category.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    Model, VariationModel = models[category]
+
+    if request.method == 'POST':
+        product_id = request.form['product_id']
+        name = request.form['name']
+        img_url = request.form['img_url']
+        description = request.form.get('description', '')
+
+        # Create and add the main product
+        new_product = Model(
+            id=product_id,
+            product_name=name,
+            img_url=img_url,
+            description=description
+        )
+        db.session.add(new_product)
+        db.session.commit()
+
+        # Handle variations
+        variation_meters = request.form.getlist('variations[][meters]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+        variation_actions = request.form.getlist('variations[][action]')
+
+        num_variations = len(variation_meters)
+        if (len(variation_prices) != num_variations or
+                len(variation_stocks) != num_variations or
+                len(variation_actions) != num_variations):
+            flash('Mismatch in variation data lengths.', 'danger')
+            return redirect(url_for('add_product', category=category))
+
+        for i in range(num_variations):
+            meters = variation_meters[i]
+            price = variation_prices[i]
+            stock = variation_stocks[i]
+            action = variation_actions[i]
+            variation = VariationModel(
+                product_id=new_product.id,
+                meters=meters,
+                price=float(price),
+                stock=int(stock),
+                action=action
+            )
+            db.session.add(variation)
+
+        db.session.commit()
+
+        flash('Product and its variations added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_products.html', category=category)
 
 
 # Add product route

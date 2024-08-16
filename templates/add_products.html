@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Makineta</title>
+    <title>Add Product</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
 <div class="container">
-    <h1 class="mt-5">Add New Makineta Product</h1>
-    <form method="POST" action="{{ url_for('add_product') }}">
+    <h1 class="mt-5">Add {{ category | capitalize }}</h1>
+    <form method="POST" action="{{ url_for('add_product', category=category) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="category" value="{{ category }}">
         <div class="form-group">
             <label for="product_id">Product ID</label>
             <input type="number" class="form-control" id="product_id" name="product_id" required>
@@ -48,16 +50,20 @@
                 <div class="variation-container border p-3 mb-3" id="variation-${index}">
                     <h5>Variation ${parseInt(index) + 1}</h5>
                     <div class="form-group">
-                        <label for="variations[${index}][size]">Size</label>
-                        <input type="text" class="form-control" id="variations_${index}_size" name="variations[][size]" required>
+                        <label for="variations[${index}][meters]">Meters</label>
+                        <input type="text" class="form-control" name="variations[][meters]" required>
                     </div>
                     <div class="form-group">
                         <label for="variations[${index}][price]">Price</label>
-                        <input type="number" class="form-control" id="variations_${index}_price" name="variations[][price]" step="0.01" required>
+                        <input type="number" class="form-control" name="variations[][price]" step="0.01" required>
                     </div>
                     <div class="form-group">
                         <label for="variations[${index}][stock]">Stock</label>
-                        <input type="number" class="form-control" id="variations_${index}_stock" name="variations[][stock]" required>
+                        <input type="number" class="form-control" name="variations[][stock]" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="variations[${index}][action]">Action</label>
+                        <input type="text" class="form-control" name="variations[][action]" required>
                     </div>
                     <button class="btn btn-danger remove-variation" data-index="${index}">Remove</button>
                 </div>`;
