@@ -2,6 +2,7 @@
 
 <div class="container">
     <h2>Your Cart</h2>
+
     <div class="row">
         {% if cart_details %}
         {% for item in cart_details %}
@@ -29,7 +30,11 @@
         <p>Your cart is empty.</p>
         {% endif %}
     </div>
-
+    {% if cart_details %}
+        <br><br>
+        <h3>Totali:{{total_price}}Lek </h3>
+        <h5>Transporti Tirane:200 lek, Rrethe: 300lek</h5>
+    {% endif %}
     <div class="row mt-3">
         <div class="col-12">
             <a href="{{ url_for('checkout') }}" class="btn btn-primary">Checkout</a>
