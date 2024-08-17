@@ -1415,6 +1415,13 @@ def checkout():
         cart_items = session.get('cart', [])
         total_amount = sum(item['price'] * item['quantity'] for item in cart_items)
 
+        # Calculate earned points
+        earned_points = total_amount // 100  # 1 point per 100 lek
+
+        # Update user's points
+        current_user.points += earned_points
+        db.session.commit()  # Commit the points update
+
         # Create a new order
         order = Orders(
             customer_id=current_user.id,
@@ -1446,9 +1453,12 @@ def checkout():
         session.pop('cart', None)
 
         # Redirect to confirmation or order summary page
+        flash(f'Thank you for your purchase! You earned {earned_points} points.', 'success')
         return redirect(url_for('index'))
 
-    return render_template('checkout.html', form=form, total_amount=calculate_total(session.get('cart', [])))
+    total_amount = calculate_total(session.get('cart', []))
+    return render_template('checkout.html', form=form, total_amount=total_amount)
+
 
 
 def calculate_total(cart_items):
