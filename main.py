@@ -1160,6 +1160,10 @@ def product_details(product_type, product_id):
         relevant_fields = ['size']
     elif product_type.lower() in ['fillespanje', 'filispanje', 'flourocarbon']:
         relevant_fields = ['diameter', 'meters']
+    elif product_type.lower() == 'grepa':
+        relevant_fields = ['size']
+    elif product_type.lower() == 'aksesore':
+        relevant_fields = ['type']
     else:
         relevant_fields = ['diameter']
 
