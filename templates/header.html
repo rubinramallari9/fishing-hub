@@ -85,7 +85,8 @@
             {% if current_user.is_authenticated %}
             <form class="d-flex">
                 <button class="btn btn-outline-dark" type="button">
-                    <i class="bi bi-person"></i>
+
+                    <i class="bi bi-person"><a class="nav-link" href=></a></i>
                 </button>
                 <a class="btn btn-outline-dark" href="{{ url_for('logout') }}">Log Out</a>
             </form>

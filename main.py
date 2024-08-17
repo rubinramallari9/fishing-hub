@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, session, f
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, PasswordField,IntegerField, SelectField, TextAreaField, FieldList, FormField, EmailField, SubmitField, Form, HiddenField, DecimalField
-from wtforms.validators import DataRequired, Email, Optional, EqualTo
+from wtforms.validators import DataRequired, Email, Optional, EqualTo, Length
 from functools import wraps
 from random import sample
 from sqlalchemy import func, inspect
@@ -1465,8 +1465,69 @@ def calculate_total(cart_items):
     return sum(item['price'] * item['quantity'] for item in cart_items)
 
 
+@app.route('/user')
+def user():
+    user = current_user
+    orders = Orders.query.filter_by(customer_id=user.id).all()
+
+    return render_template('user-dash.html', user=user, orders=orders)
+
+class ForgotPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Reset Password')
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        user = User.query.filter_by(email=email).first()
+        if user:
+            a = 'iypq bhpq kqaj uwxo'
+            # Implement password reset logic here (e.g., send email with reset link)
+            flash('Password reset link has been sent to your email.', 'info')
+        else:
+            flash('No account found with that email address.', 'danger')
+
+    return render_template('forgot_password.html', form=form)
 
 
+
+
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
+    confirm_new_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('new_password')])
+    submit = SubmitField('Change Password')
+
+
+@app.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        current_password = form.current_password.data
+        new_password = form.new_password.data
+        confirm_new_password = form.confirm_new_password.data
+
+        if not current_user.check_password(current_password):
+            flash('Current password is incorrect.', 'danger')
+            return redirect(url_for('change_password'))
+
+        if new_password != confirm_new_password:
+            flash('New passwords do not match.', 'danger')
+            return redirect(url_for('change_password'))
+
+        if len(new_password) < 8:
+            flash('New password must be at least 8 characters long.', 'danger')
+            return redirect(url_for('change_password'))
+
+        current_user.set_password(new_password)
+        db.session.commit()
+        flash('Password updated successfully!', 'success')
+        return redirect(url_for('user'))  # Redirect to the user dashboard
+
+    return render_template('change_password.html', form=form)
 
 if __name__ == '__main__':
     with app.app_context():
