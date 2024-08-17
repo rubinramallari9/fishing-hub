@@ -92,6 +92,17 @@
             <a href="{{ url_for('login') }}" class="login-link">Ke llogari? Log in</a>
         </form>
     </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+    {% endwith %}
 
 {% include 'footer.html' %}
 </body>

@@ -511,7 +511,6 @@ def spinning():
     for product in products:
         variations = db.session.query(ProductVariationSpinning).filter_by(product_id=product.id).all()
         product.has_stock = any(v.stock > 0 for v in variations)
-    print(products)
     return render_template("spinning.html", products=products)
 
 @app.route('/bolognese')
@@ -1186,6 +1185,7 @@ def get_variation_type(variation):
     # Build the 'type' string
     return ', '.join([f"{field}: {getattr(variation, field)}" for field in fields if getattr(variation, field)])
 
+
 @app.route('/add_to_cart/<string:category>/<int:product_id>', methods=['POST'])
 def add_to_cart(category, product_id):
     variation_id = request.form.get('variation_id')
@@ -1203,27 +1203,30 @@ def add_to_cart(category, product_id):
     variation_model = globals().get(f'ProductVariation{category.capitalize()}')
 
     if not product_model or not variation_model:
-        flash('Error: Invalid category or variation model')
         return redirect(url_for('product_details', category=category, product_id=product_id))
 
     product = db.session.get(product_model, product_id)
     variation = db.session.get(variation_model, int(variation_id))
 
     if not product or not variation:
-        flash('Error: Product or variation not found')
         return redirect(url_for('product_details', category=category, product_id=product_id))
 
+    # Determine where to get the image URL
+    img_url = variation.img_url if category.lower() == 'lures' else product.img_url
+
     # Add the product to the cart with the variation
-    cart.append({
+    cart_item = {
         'category': category,
         'product_id': product_id,
         'variation_id': int(variation_id),
         'quantity': int(quantity),
         'price': variation.price,
-        'product_name': product.product_name,
-        'img_url': product.img_url,
+        'product_name': product.product_name if hasattr(product, 'product_name') else product.name,
+        'img_url': img_url,
         'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)])
-    })
+    }
+
+    cart.append(cart_item)
 
     # Save the cart back to the session
     session['cart'] = cart
@@ -1231,6 +1234,7 @@ def add_to_cart(category, product_id):
 
     flash('Product added to cart!')
     return redirect(url_for('cart'))
+
 
 
 
@@ -1245,8 +1249,13 @@ def get_relevant_fields(category):
         return ['diameter', 'meters']
     elif category == 'lures':
         return ['grams', 'color_code']
+    elif category == 'grepa':
+        return ['size']
+    elif category == 'aksesore':
+        return ['type']
     else:
-        return ['diameter']
+        return []
+
 
 @app.route('/cart')
 def cart():
@@ -1277,39 +1286,25 @@ def cart():
         # Add to total cart price
         total_price += item_total_price
 
-        # Build cart details with error handling
-        try:
-            if category!="Lures":
-                cart_details.append({
-                    'category': category,
-                    'product_id': product_id,  # Ensure this key is present
-                    'variation_id': item['variation_id'],  # Ensure this key is present
-                    'img_url': product.img_url,
-                    'product_name': product.product_name,
-                    'quantity': quantity,
-                    'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)]),
-                    'price': variation.price,
-                    'item_total_price': item_total_price
-                })
-            else:
-                cart_details.append({
-                    'category': category,
-                    'product_id': product_id,  # Ensure this key is present
-                    'variation_id': item['variation_id'],  # Ensure this key is present
-                    'img_url': variation.img_url,
-                    'product_name': product.name,
-                    'quantity': quantity,
-                    'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)]),
-                    'price': variation.price,
-                    'item_total_price': item_total_price
-                })
+        # Determine where to get the image URL
+        img_url = variation.img_url if category.lower() == 'lures' else product.img_url
 
-        except AttributeError as e:
-            flash(f"Error processing item in cart: {e}")
-            continue
 
+        # Build cart details
+        cart_details.append({
+            'category': category,
+            'product_id': product_id,
+            'variation_id': item['variation_id'],
+            'img_url': img_url,
+            'product_name': product.product_name if hasattr(product, 'product_name') else product.name,
+            'quantity': quantity,
+            'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)]),
+            'price': variation.price,
+            'item_total_price': item_total_price
+        })
 
     return render_template('cart.html', cart_details=cart_details, total_price=total_price)
+
 
 
 @app.route('/remove_from_cart', methods=['POST'])
@@ -1318,7 +1313,6 @@ def remove_from_cart():
     product_id = request.form.get('product_id')
     type = request.form.get('type')
 
-    print(f"Removing item from cart - Category: {category}, Product ID: {product_id}")
 
     if not category or not product_id:
         flash('Invalid request')
@@ -1326,7 +1320,7 @@ def remove_from_cart():
 
     # Get the cart from the session
     cart = session.get('cart', [])
-    print(cart)
+
     # Filter out the item to be removed
     cart = [item for item in cart if not (item['category'] == category and item['product_id'] == int(product_id) and item['type'] == type)]
 
@@ -1334,7 +1328,7 @@ def remove_from_cart():
     session['cart'] = cart
     session.modified = True
 
-    flash('Product removed from cart!')
+
     return redirect(url_for('cart'))
 
 class CheckoutForm(FlaskForm):
