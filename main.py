@@ -5,7 +5,7 @@ from wtforms import StringField, FloatField, PasswordField,IntegerField, SelectF
 from wtforms.validators import DataRequired, Email, Optional, EqualTo, Length
 from functools import wraps
 from random import sample
-from sqlalchemy import func, inspect
+from sqlalchemy import func, inspect, or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, current_user, UserMixin, login_required, login_user, logout_user
@@ -1528,6 +1528,59 @@ def change_password():
         return redirect(url_for('user'))  # Redirect to the user dashboard
 
     return render_template('change_password.html', form=form)
+
+
+def search_all_databases(query):
+    product_models = [Fillespanje, Flourocarbon, Allround, Surfcasting,
+                      Beach, Spinning, Bolognese, Jigg, Bolentino, Makineta, Aksesore, Lures, Grepa]
+
+    results = []
+
+    for model in product_models:
+        if model.__tablename__ == 'lures':
+            matching_items = model.query.filter(
+                or_(
+                    model.name.ilike(f"%{query}%"),
+                    model.description.ilike(f"%{query}%")
+                )
+            ).all()
+            for item in matching_items:
+                results.append({
+                    'product': item,
+                    'product_type': 'lure'
+                })
+        else:
+            matching_items = model.query.filter(
+                or_(
+                    model.product_name.ilike(f"%{query}%"),
+                    model.description.ilike(f"%{query}%")
+                )
+            ).all()
+            for item in matching_items:
+                results.append({
+                    'product': item,
+                    'product_type': model.__tablename__
+                })
+
+    return results
+
+
+
+
+@app.route('/search')
+def search():
+    query = request.args.get('query')
+    if not query:
+        return render_template('search_results.html', query=query, results=[], has_results=False)
+
+    # Perform the search across all databases
+    results = search_all_databases(query)
+
+    # Determine if there are any results
+    has_results = len(results) > 0
+
+    return render_template('search_results.html', query=query, results=results, has_results=has_results)
+
 
 if __name__ == '__main__':
     with app.app_context():

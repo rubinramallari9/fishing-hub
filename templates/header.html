@@ -44,6 +44,12 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <form action="{{ url_for('search') }}" method="get" class="search-form d-flex">
+                <input type="text" name="query" class="form-control me-2" placeholder="Search for products..." required>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+
+
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
                 <li class="nav-item"><a class="nav-link active" aria-current="page"
                                         href="{{ url_for('index') }}">Kreu</a></li>
