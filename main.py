@@ -375,7 +375,7 @@ class Aksesore(db.Model):
     __bind_key__ = "aksesore"
     __tablename__ = "aksesore"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(250), nullable=False)
     img_url = db.Column(db.String(1000), nullable=False)
     description = db.Column(db.String(1000))
@@ -452,32 +452,6 @@ def aksesore():
         variations = db.session.query(ProductVariationAksesore).filter_by(product_id=product.id).all()
         product.has_stock = any(v.stock > 0 for v in variations)
     return render_template("aksesore.html", products=products, variations=variations)
-@app.route('/add_test_product_aksesore')
-def add_test_product_aksesore():
-    # Create a test product
-    test_product = Aksesore(
-        product_name="Test Product Aksesore",
-        img_url="https://example.com/test-product-aksesore.jpg",
-        description="This is a test product for Aksesore category."
-    )
-
-    # Add the product to the session
-    db.session.add(test_product)
-    db.session.commit()  # Save the product to generate the ID
-
-    # Create a variation for the test product
-    test_variation = ProductVariationAksesore(
-        product_id=test_product.id,
-        type="Standard",
-        price=19.99,
-        stock=50
-    )
-
-    # Add the variation to the session
-    db.session.add(test_variation)
-    db.session.commit()  # Save the variation
-
-    return "Test product for Aksesore added successfully!"
 
 
 @app.route('/fillespanje')
@@ -983,6 +957,146 @@ def add_product(category):
 
     return render_template('add_products.html', category=category)
 
+@app.route('/dashboard/add_product_lures', methods=['GET', 'POST'])
+def add_product_lures():
+    if request.method == 'POST':
+        product_name = request.form['product_name']
+
+        description = request.form.get('description', '')
+
+        # Create and add the main product without setting the id
+        new_lure = Lures(
+            name=product_name,
+            description=description
+        )
+        db.session.add(new_lure)
+        db.session.commit()
+
+        # Handle variations
+        variation_grams = request.form.getlist('variations[][grams]')
+        variation_color_codes = request.form.getlist('variations[][color_code]')
+        variation_img_urls = request.form.getlist('variations[][img_url]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+
+        num_variations = len(variation_grams)
+        if (len(variation_color_codes) != num_variations or
+                len(variation_img_urls) != num_variations or
+                len(variation_prices) != num_variations or
+                len(variation_stocks) != num_variations):
+            flash('Mismatch in variation data lengths.', 'danger')
+            return redirect(url_for('add_product_lures'))
+
+        for i in range(num_variations):
+            grams = variation_grams[i]
+            color_code = variation_color_codes[i]
+            variation_img_url = variation_img_urls[i]
+            price = variation_prices[i]
+            stock = variation_stocks[i]
+            variation = ProductVariationLures(
+                lure_id=new_lure.id,
+                grams=grams,
+                color_code=color_code,
+                img_url=variation_img_url,
+                price=float(price),
+                stock=int(stock)
+            )
+            db.session.add(variation)
+
+        db.session.commit()
+
+        flash('Lure and its variations added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_lures.html')
+
+# Grepa
+@app.route('/dashboard/add_product_grepa', methods=['GET', 'POST'])
+def add_product_grepa():
+    if request.method == 'POST':
+        product_name = request.form['product_name']
+        img_url = request.form['img_url']
+        description = request.form.get('description', '')
+        id = request.form['product_id']
+        # Create and add the main product
+        new_grepa = Grepa(
+            id = id,
+            product_name=product_name,
+            img_url=img_url,
+            description=description
+        )
+        db.session.add(new_grepa)
+        db.session.commit()
+
+        # Handle variations
+        variation_sizes = request.form.getlist('variations[][size]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+
+        num_variations = len(variation_sizes)
+        if (len(variation_prices) != num_variations or
+                len(variation_stocks) != num_variations):
+            flash('Mismatch in variation data lengths.', 'danger')
+            return redirect(url_for('add_product_grepa'))
+
+        for i in range(num_variations):
+            size = variation_sizes[i]
+            price = variation_prices[i]
+            stock = variation_stocks[i]
+            variation = ProductVariationGrepa(
+                product_id=new_grepa.id,
+                size=size,
+                price=float(price),
+                stock=int(stock)
+            )
+            db.session.add(variation)
+
+        db.session.commit()
+
+        flash('Grepa and its variations added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_grepa.html')
+
+
+# Aksesore
+@app.route('/dashboard/add_product_aksesore', methods=['GET', 'POST'])
+def add_product_aksesore():
+    if request.method == 'POST':
+        product_name = request.form['product_name']
+        img_url = request.form['img_url']
+        description = request.form.get('description', '')
+
+        # Create and add the main product
+        new_product = Aksesore(
+            product_name=product_name,
+            img_url=img_url,
+            description=description
+        )
+        db.session.add(new_product)
+        db.session.commit()
+
+        # Handle variations
+        variation_types = request.form.getlist('variations[][type]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+
+        for i in range(len(variation_types)):
+            variation = ProductVariationAksesore(
+                product_id=new_product.id,
+                type=variation_types[i],
+                price=float(variation_prices[i]),
+                stock=int(variation_stocks[i])
+            )
+            db.session.add(variation)
+
+        db.session.commit()
+
+        flash('Product and its variations added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_aksesore.html', category='aksesore')
+
 
 # Add product route
 @app.route('/dashboard/add_product/makineta', methods=['GET', 'POST'])
@@ -1040,7 +1154,7 @@ def product_details(product_type, product_id):
     variations = variation_model.query.filter_by(product_id=product_id).all()
 
     # Determine relevant fields based on product type
-    if product_type in ['spinning', 'allround', 'surfcasting', 'bolognese', 'jigg', 'bolentino']:
+    if product_type.lower() in ['spinning', 'allround', 'surfcasting', 'bolognese', 'jigg', 'bolentino']:
         relevant_fields = ['meters', 'action']
     elif product_type.lower() == 'makineta' or product_type.lower() == "reel":
         relevant_fields = ['size']
