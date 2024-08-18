@@ -11,17 +11,37 @@
         font-weight: bold;
         font-size: 2rem;
     }
+
+    .product-image-container {
+        position: relative;
+        width: 100%;
+
+        margin: 0 auto;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: zoom-in;
+    }
 </style>
+
+<!-- Include ElevateZoom or any other zoom library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/elevatezoom/3.0.8/jquery.elevatezoom.min.js"></script>
+
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row">
             <div class="col-lg-6">
-                <img class="img-fluid" src="{{ product.img_url }}" alt="{{ product.product_name }}"/>
+                <div class="product-image-container">
+                    <img id="productImage" class="img-fluid product-image" src="{{ product.img_url }}" alt="{{ product.product_name }}" />
+                </div>
             </div>
             <div class="col-lg-6">
                 <h2 class="fw-bolder">{{ product.product_name }}</h2>
-                <form id="productForm" method="POST"
-                      action="{{ url_for('add_to_cart', category=product_type, product_id=product.id) }}">
+                <form id="productForm" method="POST" action="{{ url_for('add_to_cart', category=product_type, product_id=product.id) }}">
                     <!-- CSRF Token Field -->
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
@@ -31,8 +51,7 @@
                         <select id="variationSelect" class="form-select" onchange="updateStockInfo()">
                             <option value="" disabled selected>Select your option</option>
                             {% for variation in variations %}
-                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}"
-                                    data-price="{{ variation.price }}">
+                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
                                 {% for field in relevant_fields %}
                                     {{ variation[field] }}{% if not loop.last %} - {% endif %}
                                 {% endfor %}
@@ -44,15 +63,13 @@
                     <!-- Quantity Input -->
                     <div class="mb-3">
                         <label for="quantityInput" class="form-label">Quantity</label>
-                        <input type="number" id="quantityInput" name="quantity" class="form-control" value="1" min="1"
-                               oninput="updateStockInfo()">
+                        <input type="number" id="quantityInput" name="quantity" class="form-control" value="1" min="1" oninput="updateStockInfo()">
                     </div>
 
                     <!-- Stock Bar -->
                     <div class="mb-3" id="stockInfo" style="display: none;">
                         <div class="progress">
-                            <div id="stockBar" class="progress-bar" role="progressbar" aria-valuemin="0"
-                                 aria-valuemax="{{ max_stock }}"></div>
+                            <div id="stockBar" class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ max_stock }}"></div>
                         </div>
                         <p id="stockText"></p>
                     </div>
@@ -72,9 +89,11 @@
         </div>
     </div>
 </section>
+
 <div class="banner">
     Produkte të ngjashme
 </div>
+
 {% include 'random_items.html' %}
 
 <script>
@@ -121,6 +140,13 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         updateStockInfo();
+
+        // Initialize ElevateZoom or other zoom functionality
+        $('#productImage').elevateZoom({
+            zoomType: "lens",
+            lensShape: "round",
+            lensSize: 200
+        });
     });
 </script>
 
