@@ -1315,7 +1315,7 @@ def product_details(product_type, product_id):
 
     # Calculate the maximum stock value for progress bar
     max_stock = max(variation.stock for variation in variations) if variations else 0
-
+    print(product_type)
     # Render the template with the necessary context
     return render_template('product_details.html',
                            product=product,
@@ -1429,7 +1429,7 @@ def cart():
             continue
 
         # Calculate item total price
-        item_total_price = quantity * variation.price
+        item_total_price = quantity * variation.price if category.lower() != "oferta" else variation.sale_price
 
         # Add to total cart price
         total_price += item_total_price
