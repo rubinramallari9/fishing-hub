@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Search Results for "{{ query }}"</h1>
+        {% for category, products in results.items() %}
+            <h2 class="mt-4">{{ category | capitalize }}</h2>
+            <ul class="list-group">
+                {% for product in products %}
+                    <li class="list-group-item">
+                        <a href="{{ url_for('edit_product', category=category, product_id=product.id) }}">{{ product.product_name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+        <a href="{{ url_for('search_product') }}" class="btn btn-secondary mt-3">Search Again</a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

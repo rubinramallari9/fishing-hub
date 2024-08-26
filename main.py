@@ -1731,6 +1731,183 @@ def search():
     return render_template('search_results.html', query=query, results=results, has_results=has_results)
 
 
+
+
+class SearchProductForm(FlaskForm):
+    product_name = StringField('Product Name', validators=[DataRequired()])
+    submit = SubmitField('Search')
+
+class EditProductForm(FlaskForm):
+    product_name = StringField('Product Name', validators=[DataRequired()])
+    img_url = StringField('Image URL', validators=[DataRequired()])
+    description = TextAreaField('Description', validators=[Optional()])
+    diameter = StringField('Diameter', validators=[Optional()])
+    meters = StringField('Meters', validators=[Optional()])
+    size = StringField('Size', validators=[Optional()])
+    price = FloatField('Price', validators=[DataRequired()])
+    stock = IntegerField('Stock', validators=[DataRequired()])
+    category = SelectField('Category', choices=[], coerce=int, validators=[DataRequired()])
+    submit = SubmitField('Update')
+
+
+@app.route('/search_product', methods=['GET', 'POST'])
+def search_product():
+    if request.method == 'POST':
+        search_query = request.form.get('search_query')
+        # Query all the databases for the search query
+        results = {
+            'fillespanje': Fillespanje.query.filter(Fillespanje.product_name.like(f'%{search_query}%')).all(),
+            'flourocarbon': Flourocarbon.query.filter(Flourocarbon.product_name.like(f'%{search_query}%')).all(),
+            'allround': Allround.query.filter(Allround.product_name.like(f'%{search_query}%')).all(),
+            'surfcasting': Surfcasting.query.filter(Surfcasting.product_name.like(f'%{search_query}%')).all(),
+            'beach': Beach.query.filter(Beach.product_name.like(f'%{search_query}%')).all(),
+            'spinning': Spinning.query.filter(Spinning.product_name.like(f'%{search_query}%')).all(),
+            'bolognese': Bolognese.query.filter(Bolognese.product_name.like(f'%{search_query}%')).all(),
+            'jigg': Jigg.query.filter(Jigg.product_name.like(f'%{search_query}%')).all(),
+            'bolentino': Bolentino.query.filter(Bolentino.product_name.like(f'%{search_query}%')).all(),
+            'makineta': Makineta.query.filter(Makineta.product_name.like(f'%{search_query}%')).all(),
+            'lures': Lures.query.filter(Lures.name.like(f'%{search_query}%')).all(),
+            'grepa': Grepa.query.filter(Grepa.product_name.like(f'%{search_query}%')).all(),
+            'aksesore': Aksesore.query.filter(Aksesore.product_name.like(f'%{search_query}%')).all(),
+            'oferta': Oferta.query.filter(Oferta.product_name.like(f'%{search_query}%')).all(),
+            'spearfishing': Spearfishing.query.filter(Spearfishing.product_name.like(f'%{search_query}%')).all(),
+        }
+        return render_template('search_results_.html', results=results, query=search_query)
+
+    return render_template('search_form.html')
+
+
+@app.route('/edit_product/<category>/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(category, product_id):
+    models = {
+        'fillespanje': Fillespanje,
+        'flourocarbon': Flourocarbon,
+        'allround': Allround,
+        'surfcasting': Surfcasting,
+        'beach': Beach,
+        'spinning': Spinning,
+        'bolognese': Bolognese,
+        'jigg': Jigg,
+        'bolentino': Bolentino,
+        'makineta': Makineta,
+        'lures': Lures,
+        'grepa': Grepa,
+        'aksesore': Aksesore,
+        'oferta': Oferta,
+        'spearfishing': Spearfishing,
+    }
+
+    variations_models = {
+        'fillespanje': ProductVariationFillespanje,
+        'flourocarbon': ProductVariationFlourocarbon,
+        'allround': ProductVariationAllround,
+        'surfcasting': ProductVariationSurfcasting,
+        'beach': ProductVariationBeach,
+        'spinning': ProductVariationSpinning,
+        'bolognese': ProductVariationBolognese,
+        'jigg': ProductVariationJigg,
+        'bolentino': ProductVariationBolentino,
+        'makineta': ProductVariationMakineta,
+        'lures': ProductVariationLures,
+        'grepa': ProductVariationGrepa,
+        'aksesore': ProductVariationAksesore,
+        'oferta': ProductVariationOferta,
+        'spearfishing': ProductVariationSpearfishing,
+    }
+
+    model = models.get(category)
+    variations_model = variations_models.get(category)
+
+    if not model or not variations_model:
+        return redirect(url_for('search_product'))
+
+    product = model.query.get(product_id)
+    variations = variations_model.query.filter_by(product_id=product_id).all()
+
+    if request.method == 'POST':
+        product.product_name = request.form.get('product_name')
+        product.img_url = request.form.get('img_url')
+        product.description = request.form.get('description')
+
+        # Update or create new variations
+        for variation in variations:
+            variation.price = float(request.form.get(f'price_{variation.id}', variation.price))
+            variation.stock = int(request.form.get(f'stock_{variation.id}', variation.stock))
+            if category in ['fillespanje', 'flourocarbon']:
+                variation.diameter = request.form.get(f'diameter_{variation.id}', variation.diameter)
+                variation.meters = request.form.get(f'meters_{variation.id}', variation.meters)
+            elif category in ['allround', 'surfcasting', 'beach', 'spinning', 'bolognese', 'jigg', 'bolentino']:
+                variation.action = request.form.get(f'action_{variation.id}', variation.action)
+            elif category == 'makineta':
+                variation.size = request.form.get(f'size_{variation.id}', variation.size)
+
+        # Commit updates
+        db.session.commit()
+        return redirect(url_for('search_product'))
+
+    return render_template('edit_product.html', product=product, variations=variations, category=category)
+
+
+@app.route('/delete_product/<category>/<int:product_id>', methods=['POST'])
+@csrf.exempt
+def delete_product(category, product_id):
+    models = {
+        'fillespanje': Fillespanje,
+        'flourocarbon': Flourocarbon,
+        'allround': Allround,
+        'surfcasting': Surfcasting,
+        'beach': Beach,
+        'spinning': Spinning,
+        'bolognese': Bolognese,
+        'jigg': Jigg,
+        'bolentino': Bolentino,
+        'makineta': Makineta,
+        'lures': Lures,
+        'grepa': Grepa,
+        'aksesore': Aksesore,
+        'oferta': Oferta,
+        'spearfishing': Spearfishing,
+    }
+
+    variations_models = {
+        'fillespanje': ProductVariationFillespanje,
+        'flourocarbon': ProductVariationFlourocarbon,
+        'allround': ProductVariationAllround,
+        'surfcasting': ProductVariationSurfcasting,
+        'beach': ProductVariationBeach,
+        'spinning': ProductVariationSpinning,
+        'bolognese': ProductVariationBolognese,
+        'jigg': ProductVariationJigg,
+        'bolentino': ProductVariationBolentino,
+        'makineta': ProductVariationMakineta,
+        'lures': ProductVariationLures,
+        'grepa': ProductVariationGrepa,
+        'aksesore': ProductVariationAksesore,
+        'oferta': ProductVariationOferta,
+        'spearfishing': ProductVariationSpearfishing,
+    }
+
+    model = models.get(category)
+    variations_model = variations_models.get(category)
+
+    if not model or not variations_model:
+        return redirect(url_for('search_product'))
+
+    product = model.query.get(product_id)
+
+    if product:
+        # Delete variations
+        variations = variations_model.query.filter_by(product_id=product_id).all()
+        for variation in variations:
+            db.session.delete(variation)
+
+        # Delete the product itself
+        db.session.delete(product)
+        db.session.commit()
+
+    return redirect(url_for('search_product'))
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
