@@ -54,7 +54,7 @@
                         <select id="variationSelect" class="form-select" onchange="updateStockInfo()">
                             <option value="" disabled selected>Select your option</option>
                             {% for variation in variations %}
-                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price }}">
+                            <option value="{{ variation.id }}" data-stock="{{ variation.stock }}" data-price="{{ variation.price if category.lower() != 'oferta' else variation.sale_price }}">
                                 {% for field in relevant_fields %}
                                     {{ variation[field] }}{% if not loop.last %} - {% endif %}
                                 {% endfor %}

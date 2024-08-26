@@ -1360,6 +1360,7 @@ def add_to_cart(category, product_id):
 
     # Determine where to get the image URL
     img_url = variation.img_url if category.lower() == 'lures' else product.img_url
+    price = variation.price if category.lower() != "oferta" else variation.sale_price
 
     # Add the product to the cart with the variation
     cart_item = {
@@ -1367,7 +1368,7 @@ def add_to_cart(category, product_id):
         'product_id': product_id,
         'variation_id': int(variation_id),
         'quantity': int(quantity),
-        'price': variation.price,
+        'price': price,
         'product_name': product.product_name if hasattr(product, 'product_name') else product.name,
         'img_url': img_url,
         'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)])
@@ -1435,7 +1436,7 @@ def cart():
 
         # Determine where to get the image URL
         img_url = variation.img_url if category.lower() == 'lures' else product.img_url
-
+        price = variation.price if category.lower() != "oferta" else variation.sale_price
 
         # Build cart details
         cart_details.append({
@@ -1446,7 +1447,7 @@ def cart():
             'product_name': product.product_name if hasattr(product, 'product_name') else product.name,
             'quantity': quantity,
             'type': ', '.join([f"{field}: {getattr(variation, field)}" for field in get_relevant_fields(category)]),
-            'price': variation.price,
+            'price': price,
             'item_total_price': item_total_price
         })
 
