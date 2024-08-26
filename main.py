@@ -625,14 +625,13 @@ def lure_details(lure_id):
 
     return render_template('lures_details.html', lure=lure, variations_by_grams=variations_by_grams, first_img=first_img, max_stock=max_stock, random_products=random_())
 
-@app.route("/spearfishing")
+@app.route('/spearfishing')
 def spearfishing():
     products = db.session.query(Spearfishing).all()
     for product in products:
         variations = db.session.query(ProductVariationSpearfishing).filter_by(product_id=product.id).all()
         product.has_stock = any(v.stock > 0 for v in variations)
-    return render_template("spearfishing.html", products=products, variations=variations)
-
+    return render_template("spearfishing.html", products=products)
 
 @app.route("/oferta")
 def oferta():
