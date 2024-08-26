@@ -1308,7 +1308,7 @@ def product_details(product_type, product_id):
         relevant_fields = ['diameter', 'meters']
     elif product_type.lower() == 'grepa':
         relevant_fields = ['size']
-    elif product_type.lower() == 'aksesore' or product_type.lower() == 'oferta' or product_type.lower() == 'aksesore':
+    elif product_type.lower() in ['aksesore', 'oferta', 'spearfishing'] :
         relevant_fields = ['type']
     else:
         relevant_fields = ['diameter']
@@ -1398,7 +1398,7 @@ def get_relevant_fields(category):
         return ['grams', 'color_code']
     elif category == 'grepa':
         return ['size']
-    elif category == 'aksesore':
+    elif category in ['aksesore', 'oferta', 'spearfishing']:
         return ['type']
     else:
         return []
