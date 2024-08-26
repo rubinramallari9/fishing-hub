@@ -1,33 +1,89 @@
 {% include 'header.html' %}
 
 {% block content %}
-<header class="bg-dark py-5"
-        style="background-image: url('../static/assets/1.jpg'); background-size: cover; background-position: center; height: 50vh;">
-    <div class="container px-4 px-lg-5 my-5 d-flex align-items-center justify-content-center" style="height: 100%;">
+<header class="bg-primary py-3"
+        style="background-image: url('https://images.unsplash.com/photo-1605499668117-5ae480112f54?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); background-size: cover; background-position: center; height: 80vh;">
+    <br>
+    <br>
+    <br>
+    <div class="container px-4 px-lg-5 my-3 d-flex align-items-center justify-content-center" style="height: 100%;">
         <h1 class="text-white fw-bold"></h1>
+        <br>
+        <br>
+        <br>
     </div>
 </header>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<section class="elementor-section elementor-top-section elementor-element elementor-element-2e63d02 elementor-section-boxed elementor-section-height-default elementor-section-height-default" data-id="2e63d02" data-element_type="section">
+    <div class="elementor-container elementor-column-gap-default">
+        <div class="elementor-column elementor-col-100 elementor-top-column elementor-element elementor-element-a1e58a8" data-id="a1e58a8" data-element_type="column">
+            <div class="elementor-widget-wrap elementor-element-populated e-swiper-container">
+                <div class="swiper-container">
+                    <div class="swiper-wrapper">
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2019/10/tb_logo.png?fit=179%2C62&ssl=1" alt="Tubertini">
+                        </div>
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2019/10/sh_logo.png?fit=179%2C62&ssl=1" alt="Shimano">
+                        </div>
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2019/10/ry_logo.png?fit=179%2C62&ssl=1" alt="Ryobi">
+                        </div>
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2019/10/fish_logo.png?fit=179%2C62&ssl=1" alt="Fiiish">
+                        </div>
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2019/10/kk_logo.png?fit=179%2C62&ssl=1" alt="Kali Kunnan">
+                        </div>
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2019/10/bb_logo.png?fit=179%2C62&ssl=1" alt="Bonebass">
+                        </div>
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2019/10/yz_logo.png?fit=179%2C62&ssl=1" alt="YZ Logo">
+                        </div>
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2023/01/savage.png?fit=179%2C62&ssl=1" alt="Savage Gear">
+                        </div>
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2023/01/duo_logo.jpg?fit=179%2C62&ssl=1" alt="Duo">
+                        </div>
+                        <div class="swiper-slide">
+                            <img decoding="async" class="swiper-slide-image" src="https://i0.wp.com/peshkatari.al/wp-content/uploads/2023/09/seac_logo.png?fit=179%2C62&ssl=1" alt="Seac">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<br>
+<br>
+<br>
+<br>
+<br>
 <br>
 {% for category, items in categories.items() %}
     <div class="category-banner mb-5">
         <div class="banner-text">
             <h2>{{ category }}</h2>
         </div>
-        <div class="row banner-items justify-content-center"> <!-- Flexbox alignment for horizontal placement -->
+        <div class="row banner-items justify-content-center">
             {% for product in items %}
-                <div class="col-md-3 mb-3 d-flex justify-content-center"> <!-- Adjusted column size and centering -->
-                    <div class="card h-100 small-card"> <!-- Added small-card class -->
-                        <!-- Product image -->
+                <div class="col-md-3 mb-3 d-flex justify-content-center">
+                    <div class="card h-100 small-card">
                         <img class="card-img-top" src="{{ product.img_url }}" alt="Product Image"/>
-                        <!-- Product details -->
-                        <div class="card-body p-3"> <!-- Adjusted padding -->
+                        <div class="card-body p-3 text-dark">
                             <div class="text-center">
-                                <!-- Product name -->
                                 <h5 class="fw-bold">{{ product.product_name }}</h5>
                             </div>
                         </div>
-                        <!-- Product actions -->
-                        <div class="card-footer p-2 border-top-0 bg-transparent"> <!-- Adjusted padding -->
+                        <div class="card-footer p-2 border-top-0 bg-transparent">
                             <div class="text-center">
                                 <a class="btn btn-outline-dark" href="{{ url_for('product_details', product_type=category, product_id=product.id) }}">View Details</a>
                             </div>
@@ -39,28 +95,17 @@
     </div>
 {% endfor %}
 
-<!-- Swiper Carousel Section -->
-<section class="py-5">
-    <div class="container px-4 px-lg-5 mt-5">
-        <div class="swiper-wrapper-container">
-            <div class="swiper-container">
-                <div class="swiper-wrapper">
-                    <!-- Add your Swiper slides here -->
-                </div>
-                <div class="swiper-button-next"></div>
-                <div class="swiper-button-prev"></div>
-            </div>
-        </div>
-    </div>
-</section>
+{% endblock %}
 
-<!-- Swiper JS -->
+{% include 'footer.html' %}
+
+<!-- Add Swiper JS library -->
 <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <script>
     var swiper = new Swiper('.swiper-container', {
-        slidesPerView: 3, // Adjust the number of slides shown
-        spaceBetween: 10, // Adjust space between slides
-        loop: true,
+        slidesPerView: 4,
+        spaceBetween: 10,
+        loop: false, // Disable looping
         autoplay: {
             delay: 4000,
             disableOnInteraction: false,
@@ -70,109 +115,87 @@
             prevEl: '.swiper-button-prev',
         },
         breakpoints: {
-            640: {
-                slidesPerView: 1,
-            },
-            768: {
+            320: {
                 slidesPerView: 2,
+                spaceBetween: 5,
+            },
+            640: {
+                slidesPerView: 3,
+                spaceBetween: 10,
             },
             1024: {
-                slidesPerView: 3,
+                slidesPerView: 4,
+                spaceBetween: 15,
             }
         }
     });
 </script>
 
 <style>
-    .bg-dark {
-        position: relative;
-    }
-
-    .position-relative {
-        position: relative;
-    }
-
-    .position-absolute {
-        position: absolute;
-    }
-
-    .bg-dark.opacity-50 {
-        background-color: rgba(0, 0, 0, 0.5);
+    .bg-primary {
+        background-color: #007bff !important;
     }
 
     .category-banner {
         margin-bottom: 30px;
-        width: 90%; /* Reduced width of the banner */
-        max-width: 1200px; /* Ensure banner does not exceed this width */
+        width: 90%;
+        max-width: 1200px;
         margin-left: auto;
         margin-right: auto;
     }
 
     .banner-text {
-        background: linear-gradient(to right, #f7850d, #ff9a3d);
-        color: #000; /* Set text color to black */
+        background: #ff8604;
+        color: #000;
         padding: 25px;
         text-align: center;
         border-radius: 10px;
         margin-bottom: 20px;
-        font-weight: bold; /* Make the text thicker */
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
     .banner-items {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 15px; /* Increased gap to make cards sit a bit more loosely */
+        gap: 15px;
     }
 
     .small-card {
         width: 100%;
-        max-width: 280px; /* Increased max-width for larger cards */
+        max-width: 280px;
         height: auto;
     }
 
-    .card-img-top {
-        width: 100%;
-        height: 220px; /* Increased height for larger images */
-        object-fit: cover;
-    }
-
-    .swiper-wrapper-container {
-        position: relative;
-        overflow: hidden;
-    }
-
     .swiper-container {
-        width: 100%; /* Adjust width */
-        height: 250px; /* Adjust height */
-        margin: 0 auto; /* Center horizontally */
+        width: 100%;
+        height: 100%;
+    }
+
+    .swiper-slide {
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .swiper-slide img {
-        width: auto;
-        height: 100%; /* Make image fill height */
-        max-height: 250px; /* Ensure image doesn't exceed container height */
-        object-fit: cover; /* Maintain aspect ratio */
+        width: 100px; /* Adjust width as needed */
+        height: auto;
     }
 
     .swiper-button-next, .swiper-button-prev {
-        color: #000; /* Customize arrow color */
-        width: 40px; /* Adjust width */
-        height: 40px; /* Adjust height */
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 10;
+        color: #007bff;
     }
+    .small-card {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add transition for smooth effect */
+}
 
-    .swiper-button-next {
-        right: 20px; /* Position to the right */
-    }
-
-    .swiper-button-prev {
-        left: 20px; /* Position to the left */
-    }
+.small-card:hover {
+    transform: scale(1.05); /* Slightly enlarge the card on hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Add shadow on hover */
+}
 </style>
-
-{% endblock %}
-
-{% include 'footer.html' %}

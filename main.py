@@ -34,7 +34,9 @@ class Config:
         'makineta': 'sqlite:///makineta.db',
         'lures': 'sqlite:///lures.db',
         'grepa': 'sqlite:///grepa.db',
-        'aksesore': 'sqlite:///aksesore.db'
+        'aksesore': 'sqlite:///aksesore.db',
+        'oferta': 'sqlite:///oferta.db',
+        'spearfishing': 'sqlite:///spearfishing.db'
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -392,7 +394,48 @@ class ProductVariationAksesore(db.Model):
 
     product = db.relationship('Aksesore', backref=db.backref('variations', lazy=True))
 
-# Decorator to require login
+
+class Oferta(db.Model):
+    __bind_key__ = "oferta"
+    __tablename__ = "oferta"
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(1000), nullable=False)
+    description = db.Column(db.String(1000))
+
+class ProductVariationOferta(db.Model):
+    __bind_key__ = "oferta"
+    __tablename__ = "oferta_variation"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('oferta.id'), nullable=False)
+    type = db.Column(db.String(250), nullable=False)
+    default_price = db.Column(db.Float, nullable=False)
+    sale_price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False, default=0)
+
+
+    product = db.relationship('Oferta', backref=db.backref('variations', lazy=True))
+
+class Spearfishing(db.Model):
+    __bind_key__ = "spearfishing"
+    __tablename__ = "spearfishing"
+    id = db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(1000), nullable=False)
+    description = db.Column(db.String(1000))
+
+class ProductVariationSpearfishing(db.Model):
+    __bind_key__ = "spearfishing"
+    __tablename__ = "spearfishing_variation"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('spearfishing.id'), nullable=False)
+    type = db.Column(db.String(250), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False, default=0)
+
+
+    product = db.relationship('Spearfishing', backref=db.backref('variations', lazy=True))
+
 
 # Login form
 class LoginForm(FlaskForm):
@@ -581,6 +624,34 @@ def lure_details(lure_id):
             break
 
     return render_template('lures_details.html', lure=lure, variations_by_grams=variations_by_grams, first_img=first_img, max_stock=max_stock, random_products=random_())
+
+@app.route("/spearfishing")
+def spearfishing():
+    products = db.session.query(Spearfishing).all()
+    for product in products:
+        variations = db.session.query(ProductVariationSpearfishing).filter_by(product_id=product.id).all()
+        product.has_stock = any(v.stock > 0 for v in variations)
+    return render_template("spearfishing.html", products=products, variations=variations)
+
+
+@app.route("/oferta")
+def oferta():
+    products = db.session.query(Oferta).all()
+
+    # Iterate over each product to determine if it has stock and calculate price range
+    for product in products:
+        variations = db.session.query(ProductVariationOferta).filter_by(product_id=product.id).all()
+        product.has_stock = any(v.stock > 0 for v in variations)
+
+        if variations:
+            # Extracting all sale prices from the variations
+            prices = [v.sale_price for v in variations]
+            product.min_price = min(prices)
+            product.max_price = max(prices)
+        else:
+            product.min_price = product.max_price = None
+
+    return render_template("oferta.html", products=products)
 
 
 @app.route("/kontakto")
@@ -1096,6 +1167,82 @@ def add_product_aksesore():
 
     return render_template('add_aksesore.html', category='aksesore')
 
+@app.route('/dashboard/add_product_oferta', methods=['GET', 'POST'])
+def add_product_oferta():
+    if request.method == 'POST':
+        product_name = request.form['product_name']
+        img_url = request.form['img_url']
+        description = request.form.get('description', '')
+
+        # Create and add the main product
+        new_product = Oferta(
+            product_name=product_name,
+            img_url=img_url,
+            description=description
+        )
+        db.session.add(new_product)
+        db.session.commit()
+
+        # Handle variations
+        variation_types = request.form.getlist('variations[][type]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_sale_price = request.form.getlist('variations[][sale_price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+
+        for i in range(len(variation_types)):
+            variation = ProductVariationOferta(
+                product_id=new_product.id,
+                type=variation_types[i],
+                default_price=float(variation_prices[i]),
+                sale_price = float(variation_sale_price[i]),
+                stock=int(variation_stocks[i])
+            )
+            db.session.add(variation)
+
+        db.session.commit()
+
+        flash('Product and its variations added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_oferta.html', category='oferta')
+
+@app.route('/dashboard/add_product_spearfishing', methods=['GET', 'POST'])
+def add_product_spearfishing():
+    if request.method == 'POST':
+        product_name = request.form['product_name']
+        img_url = request.form['img_url']
+        description = request.form.get('description', '')
+
+        # Create and add the main product
+        new_product = Spearfishing(
+            product_name=product_name,
+            img_url=img_url,
+            description=description
+        )
+        db.session.add(new_product)
+        db.session.commit()
+
+        # Handle variations
+        variation_types = request.form.getlist('variations[][type]')
+        variation_prices = request.form.getlist('variations[][price]')
+        variation_stocks = request.form.getlist('variations[][stock]')
+
+        for i in range(len(variation_types)):
+            variation = ProductVariationSpearfishing(
+                product_id=new_product.id,
+                type=variation_types[i],
+                price=float(variation_prices[i]),
+                stock=int(variation_stocks[i])
+            )
+            db.session.add(variation)
+
+        db.session.commit()
+
+        flash('Product and its variations added successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('add_spearfishing.html', category='spearfishing')
+
 
 # Add product route
 @app.route('/dashboard/add_product/makineta', methods=['GET', 'POST'])
@@ -1161,7 +1308,7 @@ def product_details(product_type, product_id):
         relevant_fields = ['diameter', 'meters']
     elif product_type.lower() == 'grepa':
         relevant_fields = ['size']
-    elif product_type.lower() == 'aksesore':
+    elif product_type.lower() == 'aksesore' or product_type.lower() == 'oferta' or product_type.lower() == 'aksesore':
         relevant_fields = ['type']
     else:
         relevant_fields = ['diameter']
@@ -1332,10 +1479,10 @@ def remove_from_cart():
     return redirect(url_for('cart'))
 
 class CheckoutForm(FlaskForm):
-    full_name = StringField('Full Name', validators=[DataRequired()])
-    phone_number = StringField('Phone Number', validators=[DataRequired()])
+    full_name = StringField('Emer Mbiemer', validators=[DataRequired()])
+    phone_number = StringField('Nr. ', validators=[DataRequired()])
     email = EmailField('Email', validators=[DataRequired(), Email()])
-    address = StringField('Address', validators=[DataRequired()])
+    address = StringField('Adresa', validators=[DataRequired()], default="Shteti, Qyteti, Rruga")
     submit = SubmitField('Order')
 
 
@@ -1402,7 +1549,8 @@ def checkout():
     if not current_user.is_authenticated:
         flash('You need to be logged in to access the checkout page.', 'warning')
         return redirect(url_for('login'))
-
+    if get_cart_items() == []:
+        return redirect(url_for('cart'))
     form = CheckoutForm()
     if form.validate_on_submit():
         # Collect form data
