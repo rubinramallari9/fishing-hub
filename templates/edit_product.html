@@ -25,7 +25,6 @@
                 <textarea class="form-control" id="description" name="description">{{ product.description }}</textarea>
             </div>
 
-            <!-- Add variations fields here -->
             {% for variation in variations %}
                 <div class="card mb-3">
                     <div class="card-body">
@@ -61,6 +60,13 @@
                                 <input type="text" class="form-control" id="size_{{ variation.id }}" name="size_{{ variation.id }}" value="{{ variation.size }}" required>
                             </div>
                         {% endif %}
+
+                        <!-- Add to Oferta section -->
+                        <div class="form-group">
+                            <label for="sale_price_{{ variation.id }}">Sale Price:</label>
+                            <input type="number" class="form-control" id="sale_price_{{ variation.id }}" name="sale_price_{{ variation.id }}" step="0.01">
+                        </div>
+                        <button type="submit" class="btn btn-success" name="add_to_oferta" value="{{ variation.id }}">Add to Oferta</button>
                     </div>
                 </div>
             {% endfor %}

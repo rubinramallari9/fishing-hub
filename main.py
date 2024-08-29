@@ -1824,27 +1824,71 @@ def edit_product(category, product_id):
     variations = variations_model.query.filter_by(product_id=product_id).all()
 
     if request.method == 'POST':
-        product.product_name = request.form.get('product_name')
-        product.img_url = request.form.get('img_url')
-        product.description = request.form.get('description')
+        if 'add_to_oferta' in request.form:
+            variation_id = int(request.form['add_to_oferta'])
+            variation = variations_model.query.get(variation_id)
 
-        # Update or create new variations
-        for variation in variations:
-            variation.price = float(request.form.get(f'price_{variation.id}', variation.price))
-            variation.stock = int(request.form.get(f'stock_{variation.id}', variation.stock))
-            if category in ['fillespanje', 'flourocarbon']:
-                variation.diameter = request.form.get(f'diameter_{variation.id}', variation.diameter)
-                variation.meters = request.form.get(f'meters_{variation.id}', variation.meters)
-            elif category in ['allround', 'surfcasting', 'beach', 'spinning', 'bolognese', 'jigg', 'bolentino']:
-                variation.action = request.form.get(f'action_{variation.id}', variation.action)
-            elif category == 'makineta':
-                variation.size = request.form.get(f'size_{variation.id}', variation.size)
+            if variation:
+                # Add to Oferta DB
+                oferta_product = Oferta(
+                    product_name=product.product_name,
+                    img_url=product.img_url,
+                    description=product.description
+                )
+                db.session.add(oferta_product)
+                db.session.commit()
 
-        # Commit updates
-        db.session.commit()
-        return redirect(url_for('search_product'))
+                # Create and add the variation to Oferta DB
+                oferta_variation = ProductVariationOferta(
+                    product_id=oferta_product.id,
+                    type=category,
+                    default_price=variation.price,
+                    sale_price=float(request.form.get(f'sale_price_{variation.id}', variation.price)),
+                    stock=variation.stock
+                )
+
+                # Set additional fields based on category
+                if category in ['fillespanje', 'flourocarbon']:
+                    oferta_variation.type = f"{variation.diameter} - {variation.meters}m"
+                elif category in ['allround', 'surfcasting', 'beach', 'spinning', 'bolognese', 'jigg', 'bolentino']:
+                    oferta_variation.type = f"{variation.action}"
+                elif category == 'makineta':
+                    oferta_variation.type = f"{variation.size}"
+                elif category in ['aksesore', 'oferta', 'spearfishing']:
+                    oferta_variation.type = f"{variation.type}"
+                db.session.add(oferta_variation)
+
+                # Remove the variation from the current category's database
+                db.session.delete(variation)
+                db.session.commit()
+
+            return redirect(url_for('edit_product', category=category, product_id=product_id))
+
+        else:
+            # Update product details
+            product.product_name = request.form.get('product_name')
+            product.img_url = request.form.get('img_url')
+            product.description = request.form.get('description')
+
+            # Update or create new variations
+            for variation in variations:
+                variation.price = float(request.form.get(f'price_{variation.id}', variation.price))
+                variation.stock = int(request.form.get(f'stock_{variation.id}', variation.stock))
+                if category in ['fillespanje', 'flourocarbon']:
+                    variation.diameter = request.form.get(f'diameter_{variation.id}', variation.diameter)
+                    variation.meters = request.form.get(f'meters_{variation.id}', variation.meters)
+                elif category in ['allround', 'surfcasting', 'beach', 'spinning', 'bolognese', 'jigg', 'bolentino']:
+                    variation.action = request.form.get(f'action_{variation.id}', variation.action, variation.meters)
+                elif category == 'makineta':
+                    variation.size = request.form.get(f'size_{variation.id}', variation.size)
+
+            # Commit updates
+            db.session.commit()
+
+            return redirect(url_for('edit_product', category=category, product_id=product_id))
 
     return render_template('edit_product.html', product=product, variations=variations, category=category)
+
 
 
 @app.route('/delete_product/<category>/<int:product_id>', methods=['POST'])
